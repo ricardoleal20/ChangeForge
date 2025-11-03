@@ -143,6 +143,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "changeforge"
+version = "0.0.0"
+dependencies = [
+ "clap",
+ "colored",
+ "dotenvy",
+ "fake",
+ "pyo3",
+ "regex",
+ "requestty",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "toml",
+]
+
+[[package]]
 name = "clap"
 version = "4.5.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1677,25 +1696,6 @@ name = "vcpkg"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
-
-[[package]]
-name = "versionwise"
-version = "0.0.0"
-dependencies = [
- "clap",
- "colored",
- "dotenvy",
- "fake",
- "pyo3",
- "regex",
- "requestty",
- "reqwest",
- "serde",
- "serde_json",
- "tempfile",
- "tokio",
- "toml",
-]
 
 [[package]]
 name = "want"

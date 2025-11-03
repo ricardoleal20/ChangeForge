@@ -12,7 +12,7 @@ fn main() {
     // Create the methods
     let (create, list, bump) = create_subcommands();
     // Instance the App
-    let mut app = Command::new("VersionWise :: Project management with Changesets")
+    let mut app = Command::new("ChangeForge :: Project management with Changesets")
         .subcommand(create)
         .subcommand(list)
         .subcommand(bump)

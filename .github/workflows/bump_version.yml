@@ -6,7 +6,7 @@ on:
       - main
   # -------------------------------------------------------------------------- #
   # To use this Workflow, you need to specify this line on your job:           #
-  # uses: ricardoleal20/versionwise/.github/workflows/bump_version.yml@main    #
+  # uses: ricardoleal20/changeforge/.github/workflows/bump_version.yml@main    #
   # -------------------------------------------------------------------------- #
   workflow_call:
 
@@ -75,7 +75,7 @@ jobs:
         git reset --hard origin/main
 
         # Now apply the version bump on the clean state
-        poetry run versionwise bump
+        poetry run changeforge bump
 
         # Stage and commit changes
         git add --all

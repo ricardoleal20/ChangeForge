@@ -85,7 +85,7 @@ def apply_changesets(token: str, repo: str, branch: str) -> None:
     base_tree = git_repo.get_git_tree(sha=head_sha)
     tree = git_repo.create_git_tree(changed_files, base_tree)
     # Apply the commit for the new bump
-    bump_commit_message = "🔖 PR: Create Pull Request for new VersionWise version"
+    bump_commit_message = "🔖 PR: Create Pull Request for new ChangeForge version"
     # Create the git commit applying the Changesets
     commit = git_repo.create_git_commit(
         message=bump_commit_message,
