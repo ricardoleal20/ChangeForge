@@ -20,51 +20,61 @@ pip install changeforge
 
 Please consider that it requires `Python >=3.9`
 
-## Usage
+## Quickstart
 
-This Rust package, `changeforge`, provides several command-line tools for managing project versions and changesets. Below are the available commands and their usage examples.
+1) Initialize configuration (once per repo):
 
-### Commands
+```sh
+changeforge init
+```
 
-#### `create`
+Creates `changeforge.toml`, lets you enable 🤖 AI messages and 💾 commit‑after‑create, and optionally generates the CI workflows (`.github/workflows/bump_version.yml`, `.github/workflows/release_on_merge.yml`).
 
-Create a new changeset to document changes in the project.
+Example `changeforge.toml`:
+
+```toml
+[changeforge]
+version_path = ["pyproject.toml", "Cargo.toml"]
+changesets_dir = ".changesets"
+changelog_path = "CHANGELOG.md"
+ai_enabled = true
+templates_dir = "templates/messages"   # empty to disable
+commit_on_create = true
+```
+
+2) Create a changeset:
 
 ```sh
 changeforge create
 ```
 
-This command creates a new changeset with the provided description. 
+- Select the change type (MAJOR/MINOR/PATCH) and a tag
+- Pick a module from Git changes or the filesystem, or type a path
+- Changeset message: AI (if `ai_enabled`), a template from `templates_dir` (if any files exist), or manual text
+- If `commit_on_create = true`, you'll be prompted to commit the changeset and the selected file
 
-#### `list`
-
-List all changesets created for the project.
+3) View pending changes and next version:
 
 ```sh
 changeforge list
 ```
 
-This command displays a list of all changesets recorded in the project, along with their descriptions and types.
-
-#### `bump`
-
-Bump the project version according to the specified type.
+4) Perform the bump (updates the version and `CHANGELOG.md`, clears `.changesets/`):
 
 ```sh
 changeforge bump
 ```
 
-This command increments the project version based on the specified type: `major`, `minor`, or `patch`. It updates the version number in the project files accordingly.
-
-Also, it deletes all the current `changesets` to avoid changes 
-
----
-
-For more details on each command and its options, refer to the command-line help:
+For more options:
 
 ```sh
 changeforge --help
 ```
+
+## Optional CI
+
+- `bump_version.yml`: automatically creates/updates a bump PR on `bump-new-version` (reads paths from `changeforge.toml`).
+- `release_on_merge.yml`: creates a GitHub Release when the bump PR is merged, only if it comes from the configured bump branch.
 
 ## Contributing
 
