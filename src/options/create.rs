@@ -461,7 +461,11 @@ pub fn create_changesets() {
 
 // ===== Theming & helpers (similar approach to init) =====
 fn apply_inquire_theme() {
-    let rc = RenderConfig { prompt_prefix: Styled::new("❯"), answered_prompt_prefix: Styled::new("✔"), ..RenderConfig::default() };
+    let rc = RenderConfig {
+        prompt_prefix: Styled::new("❯"),
+        answered_prompt_prefix: Styled::new("✔"),
+        ..RenderConfig::default()
+    };
     set_global_render_config(rc);
 }
 
