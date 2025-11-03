@@ -36,7 +36,7 @@ jobs:
 
       - name: Install Poetry and deps 🏗️
         run: |
-          pip install -Iv poetry==1.8.1
+          pip install -Iv poetry
           poetry config virtualenvs.in-project true
           poetry install --no-interaction
 
