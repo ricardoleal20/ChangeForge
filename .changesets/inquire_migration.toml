@@ -1,0 +1,8 @@
+[changeset]
+change_type = "MINOR"
+tag = "Feature"
+version = "0.1.4"
+
+[changes]
+modules = ["src/options/init.rs", "src/options/create.rs"]
+description = "Migrate interactive prompts to Inquire; add custom prompt icons, separators, styled success/cancel boxes, and improved UX for selection."

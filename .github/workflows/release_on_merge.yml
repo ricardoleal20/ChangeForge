@@ -1,0 +1,73 @@
+name: 🚀 Auto Release on Bump Merge
+
+on:
+    pull_request:
+        types: [closed]
+        branches:
+            - main
+
+permissions:
+    contents: write
+
+jobs:
+    release:
+        name: Create GitHub Release
+        if: github.event.pull_request.merged == true
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Read ChangeForge config
+              id: cfg
+              shell: bash
+              run: |
+                  BUMP_BRANCH=bump-new-version
+                  CHANGELOG=CHANGELOG.md
+                  if [ -f changeforge.toml ]; then
+                    BB=$(grep -E '^[[:space:]]*bump_branch[[:space:]]*=' -m1 changeforge.toml | sed -E 's/.*=\s*"([^"]+)".*/\1/')
+                    CL=$(grep -E '^[[:space:]]*changelog_path[[:space:]]*=' -m1 changeforge.toml | sed -E 's/.*=\s*"([^"]+)".*/\1/')
+                    if [ -n "$BB" ]; then BUMP_BRANCH="$BB"; fi
+                    if [ -n "$CL" ]; then CHANGELOG="$CL"; fi
+                  fi
+                  echo "bump_branch=$BUMP_BRANCH" >> $GITHUB_OUTPUT
+                  echo "changelog=$CHANGELOG" >> $GITHUB_OUTPUT
+
+            - name: Check if PR comes from bump branch
+              id: check
+              run: |
+                  HEAD_REF='${{ github.event.pull_request.head.ref }}'
+                  CFG_BRANCH='${{ steps.cfg.outputs.bump_branch }}'
+                  echo "Head ref: $HEAD_REF | Config branch: $CFG_BRANCH"
+                  if [ "$HEAD_REF" = "$CFG_BRANCH" ]; then
+                    echo "ok=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "ok=false" >> $GITHUB_OUTPUT
+                  fi
+
+            - name: Extract version and notes
+              id: meta
+              if: steps.check.outputs.ok == 'true'
+              shell: bash
+              run: |
+                  NEW_VERSION=$(grep -m1 -oE 'version\s*=\s*"[0-9]+\.[0-9]+\.[0-9]+"' pyproject.toml | sed -E 's/.*"([0-9.]+)"/\1/')
+                  if [ -z "$NEW_VERSION" ] && [ -f Cargo.toml ]; then
+                    NEW_VERSION=$(grep -m1 -oE '^version\s*=\s*"[0-9]+\.[0-9]+\.[0-9]+"' Cargo.toml | sed -E 's/.*"([0-9.]+)"/\1/')
+                  fi
+                  echo "tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
+                  awk '/^## \[/{c++;if(c==1)print; else exit} c==1{print}' "${{ steps.cfg.outputs.changelog }}" > RELEASE_NOTES.md
+
+            - name: Create Release
+              if: steps.check.outputs.ok == 'true'
+              uses: softprops/action-gh-release@v1
+              with:
+                  tag_name: ${{ steps.meta.outputs.tag }}
+                  name: ${{ steps.meta.outputs.tag }}
+                  body_path: RELEASE_NOTES.md
+
+            - name: Skipped (PR not from bump branch)
+              if: steps.check.outputs.ok != 'true'
+              run: |
+                  echo "Skipping release: PR head is not from configured bump branch"

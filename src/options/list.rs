@@ -3,12 +3,36 @@
 /// ================================ ///
 use colored::*;
 use std::collections::HashSet;
+use terminal_size::{terminal_size, Width};
 // Local imports
 use crate::utilities::{find_largest_version, get_current_changesets};
+
+fn print_separator() {
+    let default_width: usize = 60;
+    let width: usize = terminal_size()
+        .map(|(Width(w), _)| w as usize)
+        .unwrap_or(default_width)
+        .saturating_sub(2)
+        .clamp(40, 100);
+    let line = "─".repeat(width);
+    println!("\n{}\n", line.bright_black());
+}
 
 pub fn list_changesets() {
     // Get the changesets and list them
     let changesets = get_current_changesets();
+    // Header message with count
+    let count = changesets.len();
+    print_separator();
+    println!(
+        "📊 {}",
+        format!(
+            "Generating visualization of changes based on {} changesets read",
+            count
+        )
+        .bright_black()
+    );
+    print_separator();
     // Find the current project version
     let new_version = find_largest_version(&changesets).unwrap();
     // Print the new version to set with these changesets
@@ -47,4 +71,5 @@ pub fn list_changesets() {
             printed_tags.insert(&changeset.tag);
         }
     }
+    print_separator();
 }

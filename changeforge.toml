@@ -1,0 +1,4 @@
+[changeforge]
+version_path = ["pyproject.toml", "Cargo.toml"]
+changesets_dir = ".changesets"
+changelog_path = "CHANGELOG.md"

@@ -6,93 +6,112 @@ on:
       - main
   # -------------------------------------------------------------------------- #
   # To use this Workflow, you need to specify this line on your job:           #
-  # uses: ricardoleal20/versionwise/.github/workflows/bump_version.yml@main    #
+  # uses: ricardoleal20/changeforge/.github/workflows/bump_version.yml@main    #
   # -------------------------------------------------------------------------- #
   workflow_call:
 
 # Generate the jobs for this
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: bump-new-version
+  cancel-in-progress: false
+
 jobs:
-  # Name of the main job for this
   bump_and_open_pr:
     name: Bump new version 🔖
     runs-on: ubuntu-latest
-
     steps:
-    # Check the code to see the differences
-    - name: Checkout code 🧑‍💻
-      uses: actions/checkout@v3
+      - name: Checkout code 🧑‍💻
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Set Git user globally to github-actions ⑆
-      uses: gotmax23/set-bot-git-user-action@main
-      with:
-        global: true
-        bot: github-actions
-        name: "Github Actions"
+      - name: Set up Python 🐍
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
 
-    - name: Set up Python 🐍
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.10'
+      - name: Install Poetry and deps 🏗️
+        run: |
+          pip install -Iv poetry==1.8.1
+          poetry config virtualenvs.in-project true
+          poetry install --no-interaction
 
-    - name: Load cached Poetry installation 📦
-      uses: actions/cache@v3
-      with:
-        path: ~/.local
-        key: poetry-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+      - name: Prepare clean bump branch
+        run: |
+          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+          git checkout -B bump-new-version origin/main
 
-    - name: Load cached venv 📦
-      id: cached-poetry-dependencies
-      uses: actions/cache@v3
-      with:
-        path: .venv
-        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      - name: Run bump if there are pending changesets
+        id: bump
+        run: |
+          if [ -d .changesets ] && ls .changesets/*.toml >/dev/null 2>&1; then
+            poetry run changeforge bump
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "No pending changesets. Skipping bump."
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
 
-    - name: Install dependencies 🏗️
-      run: |
-        pip install -Iv poetry==1.8.1
-        poetry config virtualenvs.in-project true
-        poetry install --no-interaction
-        poetry run pip install PyGithub
-        poetry run pip install maturin
-        poetry run maturin develop
+      - name: Read ChangeForge config paths
+        id: cfg
+        shell: bash
+        run: |
+          CHANGELOG=CHANGELOG.md
+          CHANGESETS=.changesets
+          VERSIONS=$(printf "pyproject.toml\nCargo.toml")
+          if [ -f changeforge.toml ]; then
+            CL=$(grep -E '^[[:space:]]*changelog_path[[:space:]]*=' -m1 changeforge.toml | sed -E 's/.*=\s*"([^"]+)".*/\1/')
+            CS=$(grep -E '^[[:space:]]*changesets_dir[[:space:]]*=' -m1 changeforge.toml | sed -E 's/.*=\s*"([^"]+)".*/\1/')
+            VP=$(grep -E '^[[:space:]]*version_path[[:space:]]*=' -m1 changeforge.toml | sed -E 's/.*\[(.*)\].*/\1/' | tr ',' '\n' | sed -E 's/"//g;s/^\s+|\s+$//g')
+            if [ -n "$CL" ]; then CHANGELOG="$CL"; fi
+            if [ -n "$CS" ]; then CHANGESETS="$CS"; fi
+            if [ -n "$VP" ]; then VERSIONS="$VP"; fi
+          fi
+          echo "changelog=$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "changesets_dir=$CHANGESETS" >> $GITHUB_OUTPUT
+          echo "versions<<__EOF__" >> $GITHUB_OUTPUT
+          echo "$VERSIONS" >> $GITHUB_OUTPUT
+          echo "__EOF__" >> $GITHUB_OUTPUT
 
-    - name: Create and switch to bump branch 🔍
-      run: |
-        # Fetch all branches and tags
-        git fetch origin
-        
-        # Configure git user
-        git config --global user.email "github-actions@github.com"
-        git config --global user.name "GitHub Actions"
+      - name: Extract notes and version
+        id: meta
+        if: steps.bump.outputs.has_changes == 'true'
+        shell: bash
+        run: |
+          NEW_VERSION=$(grep -m1 -oE 'version\s*=\s*"[0-9]+\.[0-9]+\.[0-9]+"' pyproject.toml | sed -E 's/.*"([0-9.]+)"/\1/')
+          if [ -z "$NEW_VERSION" ] && [ -f Cargo.toml ]; then
+            NEW_VERSION=$(grep -m1 -oE '^version\s*=\s*"[0-9]+\.[0-9]+\.[0-9]+"' Cargo.toml | sed -E 's/.*"([0-9.]+)"/\1/')
+          fi
+          echo "version=v$NEW_VERSION" >> $GITHUB_OUTPUT
+          awk '/^## \[/{c++;if(c==1)print; else exit} c==1{print}' "${{ steps.cfg.outputs.changelog }}" > PR_NOTES.md
 
-        # Create a fresh branch from main
-        git checkout main
-        git pull origin main
-        
-        # Create bump branch and force it to be exactly like main
-        git branch -D bump-new-version || true
-        git checkout -b bump-new-version
-        git reset --hard origin/main
+      - name: Compute assignee
+        id: who
+        run: |
+          echo "assignee=${{ github.event.head_commit.author.username || github.actor }}" >> $GITHUB_OUTPUT
 
-        # Now apply the version bump on the clean state
-        poetry run versionwise bump
+      - name: Create or update PR
+        if: steps.bump.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: bump-new-version
+          base: main
+          title: "🔖 Bump: Release ${{ steps.meta.outputs.version }}"
+          body-path: PR_NOTES.md
+          commit-message: "🔖 Bump: Update version and CHANGELOG"
+          add-paths: |
+            ${{ steps.cfg.outputs.changelog }}
+            ${{ steps.cfg.outputs.versions }}
+            ${{ steps.cfg.outputs.changesets_dir }}/**
+          labels: |
+            release
+            bump
+          assignees: ${{ steps.who.outputs.assignee }}
 
-        # Stage and commit changes
-        git add --all
-        if git diff --staged --quiet; then
-          echo "No changes to commit"
-        else
-          git commit -m "🔖 Bump: Update version and CHANGELOG"
-          # Force push the new state
-          git push -f origin bump-new-version
-        fi
-
-    - name: Run Python script for open the PR 🖥️
-      run: poetry run python .github/utilities/open_pr.py
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        BRANCH_NAME: ${{ github.ref }}
-        REPO_NAME: ${{ github.repository }}
-
-    # If the linter pass
-    - run: echo "Version bumped and PR created! ✅"
+      - name: Done
+        run: echo "Bump flow completed."

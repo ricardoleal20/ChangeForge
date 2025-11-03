@@ -1,0 +1,13 @@
+[changeset]
+change_type = "PATCH"
+tag = "Automation"
+version = "0.1.4"
+
+[changes]
+modules = [
+    ".github/workflows/bump_version.yml",
+    ".github/workflows/release_on_merge.yml",
+]
+description = "Revamp bump workflow to be idempotent and config-driven; add release_on_merge workflow to publish releases only when merging from configured bump branch."
+
+

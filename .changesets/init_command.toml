@@ -1,0 +1,8 @@
+[changeset]
+change_type = "MINOR"
+tag = "Feature"
+version = "0.1.4"
+
+[changes]
+modules = ["src/options/init.rs", "src/utilities/mod.rs"]
+description = "Add `init` subcommand with standalone changeforge.toml, optional GitHub workflows (PR/Release), theming, and cancel handling."

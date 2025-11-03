@@ -1,76 +1,86 @@
 <p align="center">
-    <img src="https://github.com/ricardoleal20/VersionWise/blob/main/docs/img/logo.png" width="50%" height="50%" />
+    <img src="https://github.com/ricardoleal20/ChangeForge/blob/main/docs/img/logo.png" width="50%" height="50%" />
 </p>
 <p align="center">
     <b>Tool for teams that manage the creation and modification of the </b>CHANGELOG<b> based on a specified set of changes.</b>
 </p>
 
-<!-- ![PyPi version](https://img.shields.io/pypi/v/versionwise?label=PyPi%20version&logo=PyPi&style=for-the-badge)
-![Python versions supported](https://img.shields.io/pypi/pyversions/versionwise?label=Python%20Versions%20Supported&logo=Python&style=for-the-badge)
-![Deployed](https://img.shields.io/github/actions/workflow/status/ricardoleal20/versionwise/.github/workflows/publish_on_release.yml?branch=main&label=LAST%20VERSION%20DEPLOYED%20%F0%9F%9A%80&logo=Github&style=for-the-badge)
-![License](https://img.shields.io/github/license/ricardoleal20/versionwise?color=%23808000&label=%F0%9F%93%84%20LICENSE&style=for-the-badge) -->
+<!-- ![PyPi version](https://img.shields.io/pypi/v/changeforge?label=PyPi%20version&logo=PyPi&style=for-the-badge)
+![Python versions supported](https://img.shields.io/pypi/pyversions/changeforge?label=Python%20Versions%20Supported&logo=Python&style=for-the-badge)
+![Deployed](https://img.shields.io/github/actions/workflow/status/ricardoleal20/changeforge/.github/workflows/publish_on_release.yml?branch=main&label=LAST%20VERSION%20DEPLOYED%20%F0%9F%9A%80&logo=Github&style=for-the-badge)
+![License](https://img.shields.io/github/license/ricardoleal20/changeforge?color=%23808000&label=%F0%9F%93%84%20LICENSE&style=for-the-badge) -->
 
 ## Installation
 
-To install `VersionWise`, you can do it through pip:
+To install `ChangeForge`, you can do it through pip:
 
 ```
-pip install versionwise
+pip install changeforge
 ```
 
 Please consider that it requires `Python >=3.9`
 
-## Usage
+## Quickstart
 
-This Rust package, `versionwise`, provides several command-line tools for managing project versions and changesets. Below are the available commands and their usage examples.
-
-### Commands
-
-#### `create`
-
-Create a new changeset to document changes in the project.
+1) Initialize configuration (once per repo):
 
 ```sh
-versionwise create
+changeforge init
 ```
 
-This command creates a new changeset with the provided description. 
+Creates `changeforge.toml`, lets you enable 🤖 AI messages and 💾 commit‑after‑create, and optionally generates the CI workflows (`.github/workflows/bump_version.yml`, `.github/workflows/release_on_merge.yml`).
 
-#### `list`
+Example `changeforge.toml`:
 
-List all changesets created for the project.
+```toml
+[changeforge]
+version_path = ["pyproject.toml", "Cargo.toml"]
+changesets_dir = ".changesets"
+changelog_path = "CHANGELOG.md"
+ai_enabled = true
+templates_dir = "templates/messages"   # empty to disable
+commit_on_create = true
+```
+
+2) Create a changeset:
 
 ```sh
-versionwise list
+changeforge create
 ```
 
-This command displays a list of all changesets recorded in the project, along with their descriptions and types.
+- Select the change type (MAJOR/MINOR/PATCH) and a tag
+- Pick a module from Git changes or the filesystem, or type a path
+- Changeset message: AI (if `ai_enabled`), a template from `templates_dir` (if any files exist), or manual text
+- If `commit_on_create = true`, you'll be prompted to commit the changeset and the selected file
 
-#### `bump`
-
-Bump the project version according to the specified type.
+3) View pending changes and next version:
 
 ```sh
-versionwise bump
+changeforge list
 ```
 
-This command increments the project version based on the specified type: `major`, `minor`, or `patch`. It updates the version number in the project files accordingly.
-
-Also, it deletes all the current `changesets` to avoid changes 
-
----
-
-For more details on each command and its options, refer to the command-line help:
+4) Perform the bump (updates the version and `CHANGELOG.md`, clears `.changesets/`):
 
 ```sh
-versionwise --help
+changeforge bump
 ```
+
+For more options:
+
+```sh
+changeforge --help
+```
+
+## Optional CI
+
+- `bump_version.yml`: automatically creates/updates a bump PR on `bump-new-version` (reads paths from `changeforge.toml`).
+- `release_on_merge.yml`: creates a GitHub Release when the bump PR is merged, only if it comes from the configured bump branch.
 
 ## Contributing
 
 Everyone can contribute. Before contributing, please read our [code of conduct](CODE_OF_CONDUCT.md).
 
-To contribute to `VersionWise`, follow these steps:
+To contribute to `ChangeForge`, follow these steps:
 
 1. Fork this repository.
 2. Create a new branch.
