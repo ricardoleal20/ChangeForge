@@ -135,20 +135,19 @@ fn handle_cancel(err: InquireError) -> ! {
 }
 
 fn apply_inquire_theme() {
-    let mut rc = RenderConfig::default();
-    rc.prompt_prefix = Styled::new("❯");
-    rc.answered_prompt_prefix = Styled::new("✔");
+    let rc = RenderConfig { prompt_prefix: Styled::new("❯"), answered_prompt_prefix: Styled::new("✔"), ..RenderConfig::default() };
     set_global_render_config(rc);
 }
 
 fn sub_prompt_render_config() -> RenderConfig {
-    let mut rc = RenderConfig::default();
-    rc.prompt_prefix = Styled::new("↳");
-    rc.answered_prompt_prefix = Styled::new("•");
-    rc.prompt = StyleSheet::new().with_fg(Color::LightBlue);
-    rc.answer = StyleSheet::new().with_fg(Color::LightGreen);
-    rc.help_message = StyleSheet::new().with_fg(Color::DarkGrey);
-    rc
+    RenderConfig {
+        prompt_prefix: Styled::new("↳"),
+        answered_prompt_prefix: Styled::new("•"),
+        prompt: StyleSheet::new().with_fg(Color::LightBlue),
+        answer: StyleSheet::new().with_fg(Color::LightGreen),
+        help_message: StyleSheet::new().with_fg(Color::DarkGrey),
+        ..RenderConfig::default()
+    }
 }
 
 fn select_version_paths() -> Vec<String> {
@@ -190,10 +189,7 @@ fn select_version_paths() -> Vec<String> {
             .filter(|c| !selected.contains(*c))
             .cloned()
             .collect();
-        let msg = format!(
-            "{}",
-            "Select the files for extracting and modifying the version paths"
-        );
+        let msg = "Select the files for extracting and modifying the version paths".to_string();
         let choices = remaining.clone();
         let picked = MultiSelect::new(&msg, choices)
             .with_help_message("Use arrows/space to select, enter to confirm")
@@ -318,8 +314,8 @@ pub fn init_project() {
 
     let config_content = generate_config_toml(
         &version_paths,
-        &changesets_dir,
-        &changelog_path,
+        changesets_dir,
+        changelog_path,
         ai_enabled,
         templates_dir.trim(),
         commit_on_create,
@@ -337,12 +333,12 @@ pub fn init_project() {
         let sub_rc = sub_prompt_render_config();
         let watch_branch = Text::new("    Branch for watch changes:")
             .with_default("bump-new-version")
-            .with_render_config(sub_rc.clone())
+            .with_render_config(sub_rc)
             .prompt()
             .unwrap_or_else(|e| handle_cancel(e));
         let base_branch = Text::new("    Base branch for the PR:")
             .with_default("main")
-            .with_render_config(sub_rc)
+            .with_render_config(sub_prompt_render_config())
             .prompt()
             .unwrap_or_else(|e| handle_cancel(e));
         let wf_content = generate_workflow_open_pr(&watch_branch, &base_branch);

@@ -57,30 +57,8 @@ fn detect_modules() -> Vec<String> {
     modules
 }
 
-/// Get default message template based on change type and tag
-fn get_message_template(change_type: &str, tag: &str) -> String {
-    match (change_type, tag) {
-        ("MAJOR", "Remove") => "Remove ... functionality because ...".to_string(),
-        ("MAJOR", "Rename") => "Rename ... to ... to better reflect ...".to_string(),
-        ("MAJOR", "I/O") => "Change ... input/output to ...".to_string(),
-        ("MAJOR", "Behavior") => "Change behavior of ... to ...".to_string(),
-
-        ("MINOR", "Feature") => "Add ... feature that allows ...".to_string(),
-        ("MINOR", "Add") => "Add ... functionality to ...".to_string(),
-        ("MINOR", "I/O") => "Include optional ... parameter to ...".to_string(),
-        ("MINOR", "Deprecated") => {
-            "Mark ... as deprecated, to be removed in version ...".to_string()
-        }
-
-        ("PATCH", "Refactor") => "Refactor ... to improve ...".to_string(),
-        ("PATCH", "Bug") => "Fix ... bug where ...".to_string(),
-        ("PATCH", "Optimization") => "Optimize ... to improve performance by ...".to_string(),
-        ("PATCH", "Tests") => "Add tests for ... to verify ...".to_string(),
-        ("PATCH", "Patch") => "Update ... to handle ...".to_string(),
-
-        _ => "".to_string(),
-    }
-}
+// Get default message template based on change type and tag
+// (unused) kept templates are now read from templates_dir
 
 /// Get changed files from git
 fn get_git_changed_files() -> Vec<String> {
@@ -212,12 +190,13 @@ fn ask_for_module() -> String {
             .prompt()
             .unwrap_or_else(|e| handle_cancel(e));
         if choice == "Other (specify manually)" {
-            return Text::new("Enter the custom module name")
+            Text::new("Enter the custom module name")
                 .with_default("")
                 .prompt()
-                .unwrap_or_else(|e| handle_cancel(e));
+                .unwrap_or_else(|e| handle_cancel(e))
+        } else {
+            choice
         }
-        return choice;
     } else {
         let detected_modules = detect_modules();
         if detected_modules.len() > 1 {
@@ -225,17 +204,18 @@ fn ask_for_module() -> String {
                 .prompt()
                 .unwrap_or_else(|e| handle_cancel(e));
             if choice == "Other (specify manually)" {
-                return Text::new("Enter the custom module name")
+                Text::new("Enter the custom module name")
                     .with_default("")
                     .prompt()
-                    .unwrap_or_else(|e| handle_cancel(e));
+                    .unwrap_or_else(|e| handle_cancel(e))
+            } else {
+                choice
             }
-            return choice;
         } else {
-            return Text::new("Write the module/class/function name that has changed (optional)")
+            Text::new("Write the module/class/function name that has changed (optional)")
                 .with_default("")
                 .prompt()
-                .unwrap_or_else(|e| handle_cancel(e));
+                .unwrap_or_else(|e| handle_cancel(e))
         }
     }
 }
@@ -387,7 +367,7 @@ fn process_answers() -> Changeset {
     }
 
     // Get the tag (now that we know the change type)
-    let (tag, tag_icon) = set_tag(change);
+    let (tag, _tag_icon) = set_tag(change);
 
     // Get the module (with git and auto-detection)
     let module = ask_for_module();
@@ -403,7 +383,7 @@ fn process_answers() -> Changeset {
 
     // Create the changeset
     let changeset = Changeset {
-        name: name.into(),
+        name,
         change: change.into(),
         modules: module,
         tag,
@@ -481,9 +461,7 @@ pub fn create_changesets() {
 
 // ===== Theming & helpers (similar approach to init) =====
 fn apply_inquire_theme() {
-    let mut rc = RenderConfig::default();
-    rc.prompt_prefix = Styled::new("❯");
-    rc.answered_prompt_prefix = Styled::new("✔");
+    let rc = RenderConfig { prompt_prefix: Styled::new("❯"), answered_prompt_prefix: Styled::new("✔"), ..RenderConfig::default() };
     set_global_render_config(rc);
 }
 

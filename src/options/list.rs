@@ -25,8 +25,7 @@ pub fn list_changesets() {
     let count = changesets.len();
     print_separator();
     println!(
-        "{} {}",
-        "📊".to_string(),
+        "📊 {}",
         format!(
             "Generating visualization of changes based on {} changesets read",
             count
