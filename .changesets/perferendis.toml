@@ -1,8 +1,0 @@
-[changes]
-modules = ["Build with Pyproject"]
-description = "Add the Maturin BackEnd for the build process, and include a workflow for the automatic publishing of the repo once we create new tags"
-
-[changeset]
-change_type = "PATCH"
-tag = "PATCH"
-version = "0.0.1"

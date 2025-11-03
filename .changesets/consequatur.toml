@@ -1,8 +1,0 @@
-[changeset]
-change_type = "PATCH"
-tag = "PATCH"
-version = "0.0.1"
-
-[changes]
-modules = ["src/options/create.rs"]
-description = "Change the CHANGESET to include the version as one of the parameters usable for it."

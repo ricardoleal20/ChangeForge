@@ -1,8 +1,0 @@
-[changeset]
-change_type = "MINOR"
-tag = "Add"
-version = "0.1.0"
-
-[changes]
-modules = ["VersionWise backend in Rust"]
-description = "Write the VersionWise BackEnd with Rust, that includes the methods `create` to create changesets, `bump` to use the current changesets to update the version and the changelog and `list` to list the current changes"

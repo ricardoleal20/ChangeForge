@@ -1,8 +1,0 @@
-[changeset]
-change_type = "MINOR"
-tag = "Add"
-version = "0.1.0"
-
-[changes]
-modules = ["Package"]
-description = "Include documentation and help methods for all the method of the VersionWise CLI tool"

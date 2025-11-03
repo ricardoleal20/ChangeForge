@@ -1,8 +1,0 @@
-[changeset]
-change_type = "MINOR"
-tag = "Feature"
-version = "0.1.0"
-
-[changes]
-modules = ["Bump New Version"]
-description = "Based on the different paths for finding the version, bump the version on all of those files at the same time"
