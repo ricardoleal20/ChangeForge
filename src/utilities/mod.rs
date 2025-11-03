@@ -32,26 +32,32 @@ pub fn find_version() -> String {
 }
 
 pub fn find_version_in_file() -> Vec<String> {
-    // Search the `pyproject.toml` in the root folder
+    // Prefer standalone changeforge.toml
+    if let Ok(cfg) = fs::read_to_string("changeforge.toml") {
+        if let Ok(toml_cfg) = cfg.parse::<Value>() {
+            if let Some(cf) = toml_cfg.get("changeforge") {
+                if let Some(possible_paths) = cf.get("version_path") {
+                    if let Some(paths) = possible_paths.as_array() {
+                        let mut version_paths: Vec<String> = Vec::new();
+                        for path in paths {
+                            version_paths.push(path.to_string().replace("\"", ""));
+                        }
+                        if !version_paths.is_empty() {
+                            return version_paths;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Fallback to pyproject.toml [tool.changeforge]
     let route = "pyproject.toml";
+    let config = fs::read_to_string(route).expect("Error reading the `pyproject.toml` file");
+    let toml_config: Value = config
+        .parse()
+        .unwrap_or_else(|e| panic!("Error getting the file {}: {}", route, e));
 
-    // Read the pyproject.toml content
-    let config = match fs::read_to_string(route) {
-        Ok(config) => config,
-        Err(e) => {
-            panic!("Error reading the `pyproject.toml` file: {}", e);
-        }
-    };
-
-    // Parse the content as a TOML file
-    let toml_config: Value = match config.parse() {
-        Ok(toml_config) => toml_config,
-        Err(e) => {
-            panic!("Error getting the file {}: {}", route, e)
-        }
-    };
-
-    // Search the [tool.changeforge] version path
     let mut version_paths: Vec<String> = Vec::new();
     if let Some(tool) = toml_config.get("tool") {
         if let Some(changeforge) = tool.get("changeforge") {
@@ -67,9 +73,7 @@ pub fn find_version_in_file() -> Vec<String> {
                 panic!("The changeforge utility doesn't include a `version_path` field")
             }
         } else {
-            panic!(
-                "The pyproject doesn't have changeforge as tool. You should have [tool.changeforge]."
-            )
+            panic!("The pyproject doesn't have changeforge as tool. You should have [tool.changeforge].")
         }
     } else {
         panic!("The pyproject doesn't have tools associated. Please add the `changeforge` tool as [tool.changeforge].")
@@ -77,7 +81,6 @@ pub fn find_version_in_file() -> Vec<String> {
     if version_paths.is_empty() {
         panic!("Couldn't find any version paths in the configuration.")
     }
-    // Return the version paths
     version_paths
 }
 

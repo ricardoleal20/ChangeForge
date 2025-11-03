@@ -5,14 +5,15 @@ use clap::{ArgMatches, Command};
 mod options;
 mod utilities;
 // Use the methods from the modules
-use options::{bump_version, create_changesets, list_changesets};
+use options::{bump_version, create_changesets, init_project, list_changesets};
 use utilities::create_subcommands;
 
 fn main() {
     // Create the methods
-    let (create, list, bump) = create_subcommands();
+    let (init, create, list, bump) = create_subcommands();
     // Instance the App
     let mut app = Command::new("ChangeForge :: Project management with Changesets")
+        .subcommand(init)
         .subcommand(create)
         .subcommand(list)
         .subcommand(bump)
@@ -29,6 +30,8 @@ fn main() {
     let matches: ArgMatches = app.clone().get_matches();
     // Search for the matches
     match matches.subcommand() {
+        // Init
+        Some(("init", _)) => init_project(),
         // Create
         Some(("create", _)) => {
             // Instance the app method

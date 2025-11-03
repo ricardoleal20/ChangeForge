@@ -6,6 +6,13 @@ use clap::Command;
 // create a type APP to avoid write it on every command
 type CLIApp = Command;
 
+fn add_init_subcommand() -> CLIApp {
+    let init_subcommand: CLIApp = Command::new("init")
+        .about("Initialize ChangeForge configuration and optional GitHub workflows")
+        .long_about("Create a standalone changeforge.toml configuration file and optionally add GitHub workflows to open PRs on push and to create Releases automatically.");
+    init_subcommand
+}
+
 fn add_create_subcommand() -> CLIApp {
     // Here, create the subcommand `create`
     let create_subcommand: CLIApp = Command::new("create")
@@ -36,8 +43,9 @@ It is also going to delete all the current files in the `.changesets` folder (to
 }
 
 /// Create and append the subcommands  for the CLI application
-pub fn create_subcommands() -> (CLIApp, CLIApp, CLIApp) {
+pub fn create_subcommands() -> (CLIApp, CLIApp, CLIApp, CLIApp) {
     // Create the `create`` subcommand
+    let init = add_init_subcommand();
     let create = add_create_subcommand();
     // Create the `list` subcommand
     let list = add_list_subcommand();
@@ -45,5 +53,5 @@ pub fn create_subcommands() -> (CLIApp, CLIApp, CLIApp) {
     let bump = add_bump_subcommand();
     // Create the extra commands
     // Return the commands
-    (create, list, bump)
+    (init, create, list, bump)
 }
