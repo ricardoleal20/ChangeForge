@@ -1,5 +1,6 @@
 use colored::Colorize;
-use inquire::ui::{RenderConfig, Styled};
+use inquire::error::InquireError;
+use inquire::ui::{Color, RenderConfig, StyleSheet, Styled};
 /// ================================ ///
 ///          OPTIONS :: Init          ///
 /// ================================ ///
@@ -12,14 +13,14 @@ fn ask_bool(message: &str, default: bool) -> bool {
     Confirm::new(message)
         .with_default(default)
         .prompt()
-        .expect("Error asking question")
+        .unwrap_or_else(|e| handle_cancel(e))
 }
 
 fn ask_input(message: &str, default: &str) -> String {
     Text::new(message)
         .with_default(default)
         .prompt()
-        .expect("Error asking input")
+        .unwrap_or_else(|e| handle_cancel(e))
 }
 
 fn write_file_if_absent(path: &str, content: &str) {
@@ -84,11 +85,70 @@ fn print_success(message: &str) {
     println!("\n{}\n{}\n{}\n", top, middle, bottom);
 }
 
+fn print_cancel(message: &str) {
+    let default_width: usize = 60;
+    let width: usize = terminal_size()
+        .map(|(Width(w), _)| w as usize)
+        .unwrap_or(default_width)
+        .clamp(40, 100);
+    let inner = width.saturating_sub(2);
+    let top = format!(
+        "{}{}{}",
+        "┌".bright_black(),
+        "─".repeat(inner).bright_black(),
+        "┐".bright_black()
+    );
+    let bottom = format!(
+        "{}{}{}",
+        "└".bright_black(),
+        "─".repeat(inner).bright_black(),
+        "┘".bright_black()
+    );
+    let content = format!(" {} {} ", "✖".red().bold(), message.red());
+    let len = content.chars().count();
+    let pad_total = inner.saturating_sub(len);
+    let pad_left = pad_total / 2;
+    let pad_right = pad_total.saturating_sub(pad_left);
+    let middle = format!(
+        "{}{}{}{}{}",
+        "│".bright_black(),
+        " ".repeat(pad_left),
+        content,
+        " ".repeat(pad_right),
+        "│".bright_black()
+    );
+    println!("\n{}\n{}\n{}\n", top, middle, bottom);
+}
+
+fn handle_cancel(err: InquireError) -> ! {
+    match err {
+        InquireError::OperationCanceled | InquireError::OperationInterrupted => {
+            print_cancel("Operation canceled by user");
+            std::process::exit(130);
+        }
+        other => {
+            // Unexpected error: show message and exit with failure
+            print_cancel(&format!("Error: {}", other));
+            std::process::exit(1);
+        }
+    }
+}
+
 fn apply_inquire_theme() {
     let mut rc = RenderConfig::default();
     rc.prompt_prefix = Styled::new("❯");
     rc.answered_prompt_prefix = Styled::new("✔");
     set_global_render_config(rc);
+}
+
+fn sub_prompt_render_config() -> RenderConfig {
+    let mut rc = RenderConfig::default();
+    rc.prompt_prefix = Styled::new("↳");
+    rc.answered_prompt_prefix = Styled::new("•");
+    rc.prompt = StyleSheet::new().with_fg(Color::LightBlue);
+    rc.answer = StyleSheet::new().with_fg(Color::LightGreen);
+    rc.help_message = StyleSheet::new().with_fg(Color::DarkGrey);
+    rc
 }
 
 fn select_version_paths() -> Vec<String> {
@@ -146,7 +206,7 @@ fn select_version_paths() -> Vec<String> {
                     }
                 }
             }
-            Err(_) => {}
+            Err(e) => handle_cancel(e),
         }
         if !selected.is_empty() {
             break;
@@ -232,8 +292,17 @@ pub fn init_project() {
         true,
     );
     if add_pr_wf {
-        let watch_branch = ask_input("    Branch for watch changes:", "bump-new-version");
-        let base_branch = ask_input("    Base branch for the PR:", "main");
+        let sub_rc = sub_prompt_render_config();
+        let watch_branch = Text::new("    Branch for watch changes:")
+            .with_default("bump-new-version")
+            .with_render_config(sub_rc.clone())
+            .prompt()
+            .unwrap_or_else(|e| handle_cancel(e));
+        let base_branch = Text::new("    Base branch for the PR:")
+            .with_default("main")
+            .with_render_config(sub_rc)
+            .prompt()
+            .unwrap_or_else(|e| handle_cancel(e));
         let wf_content = generate_workflow_open_pr(&watch_branch, &base_branch);
         write_file_if_absent(".github/workflows/open_pr_on_push.yml", &wf_content);
     }
@@ -248,7 +317,12 @@ pub fn init_project() {
         true,
     );
     if add_release_wf {
-        let target_branch = ask_input("    Target branch for Releases:", "main");
+        let sub_rc = sub_prompt_render_config();
+        let target_branch = Text::new("    Target branch for Releases:")
+            .with_default("main")
+            .with_render_config(sub_rc)
+            .prompt()
+            .unwrap_or_else(|e| handle_cancel(e));
         let wf_content = generate_workflow_auto_release(&target_branch);
         write_file_if_absent(".github/workflows/auto_release.yml", &wf_content);
     }
