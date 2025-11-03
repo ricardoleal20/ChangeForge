@@ -1,10 +1,12 @@
 use colored::Colorize;
+use inquire::ui::{RenderConfig, Styled};
 /// ================================ ///
 ///          OPTIONS :: Init          ///
 /// ================================ ///
-use inquire::{Confirm, MultiSelect, Text};
+use inquire::{set_global_render_config, Confirm, MultiSelect, Text};
 use std::fs;
 use std::path::Path;
+use terminal_size::{terminal_size, Width};
 
 fn ask_bool(message: &str, default: bool) -> bool {
     Confirm::new(message)
@@ -33,7 +35,60 @@ fn write_file_if_absent(path: &str, content: &str) {
 }
 
 fn print_separator() {
-    println!("\n----------------------------------------\n");
+    let default_width: usize = 60;
+    let width: usize = terminal_size()
+        .map(|(Width(w), _)| w as usize)
+        .unwrap_or(default_width)
+        .saturating_sub(2)
+        .clamp(40, 100);
+    let line = "─".repeat(width);
+    println!("\n{}\n", line.bright_black());
+}
+
+fn print_note(message: &str) {
+    println!("{}", message.bright_black());
+}
+
+fn print_success(message: &str) {
+    let default_width: usize = 60;
+    let width: usize = terminal_size()
+        .map(|(Width(w), _)| w as usize)
+        .unwrap_or(default_width)
+        .clamp(40, 100);
+    let inner = width.saturating_sub(2);
+    let top = format!(
+        "{}{}{}",
+        "┌".bright_black(),
+        "─".repeat(inner).bright_black(),
+        "┐".bright_black()
+    );
+    let bottom = format!(
+        "{}{}{}",
+        "└".bright_black(),
+        "─".repeat(inner).bright_black(),
+        "┘".bright_black()
+    );
+    let content = format!(" {} {} ", "✔".green().bold(), message.green());
+    let len = content.chars().count();
+    let pad_total = inner.saturating_sub(len);
+    let pad_left = pad_total / 2;
+    let pad_right = pad_total.saturating_sub(pad_left);
+    let middle = format!(
+        "{}{}{}{}{}",
+        "│".bright_black(),
+        " ".repeat(pad_left),
+        content,
+        " ".repeat(pad_right),
+        "│".bright_black()
+    );
+    println!("\n{}\n{}\n{}\n", top, middle, bottom);
+}
+
+fn apply_inquire_theme() {
+    let mut rc = RenderConfig::default();
+    rc.prompt_prefix = Styled::new("❯");
+    rc.answered_prompt_prefix = Styled::new("✔");
+    set_global_render_config(rc);
 }
 
 fn select_version_paths() -> Vec<String> {
@@ -45,11 +100,9 @@ fn select_version_paths() -> Vec<String> {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_file() {
-                if let (Some(ext), Some(name)) = (path.extension(), path.file_name()) {
-                    if ext == "toml" {
-                        let n = name.to_string_lossy().to_string();
-                        discovered.insert(n);
-                    }
+                if let (Some(_), Some(name)) = (path.extension(), path.file_name()) {
+                    let n = name.to_string_lossy().to_string();
+                    discovered.insert(n);
                 }
             }
         }
@@ -68,6 +121,9 @@ fn select_version_paths() -> Vec<String> {
     candidates.extend(others);
 
     // MultiSelect for discovered
+    // One-time description of what this selection does
+    print_note("These files will be used to extract and update the project version during bumps.");
+
     loop {
         let remaining: Vec<String> = candidates
             .iter()
@@ -154,21 +210,25 @@ fn generate_workflow_auto_release(target_branch: &str) -> String {
 }
 
 pub fn init_project() {
+    // Apply theme once for this session
+    apply_inquire_theme();
     // 1) Select version files
     let version_paths = select_version_paths();
     print_separator();
 
     // General config paths
-    let changesets_dir = ask_input("Changesets directory:", ".changesets");
-    let changelog_path = ask_input("Changelog path:", "CHANGELOG.md");
+    print_note("Default paths will be written to changeforge.toml (editable later).");
+    let changesets_dir = ".changesets";
+    let changelog_path = "CHANGELOG.md";
 
     let config_content = generate_config_toml(&version_paths, &changesets_dir, &changelog_path);
     write_file_if_absent("changeforge.toml", &config_content);
 
     print_separator();
     // 2) Ask for PR workflow
+    print_note("On pushes to the watched branch, a PR will be opened to the base branch.");
     let add_pr_wf = ask_bool(
-        "2) Add GitHub Workflow to manage the changes automatically on push?",
+        "Add GitHub Workflow to manage the changes automatically on push?",
         true,
     );
     if add_pr_wf {
@@ -180,8 +240,11 @@ pub fn init_project() {
 
     print_separator();
     // 3) Ask for Release workflow
+    print_note(
+        "On pushes to the target branch, a GitHub Release will be created from CHANGELOG.md.",
+    );
     let add_release_wf = ask_bool(
-        "3) Add GitHub Workflow to create Release on target branch?",
+        "Add GitHub Workflow to create Release on target branch?",
         true,
     );
     if add_release_wf {
@@ -190,5 +253,5 @@ pub fn init_project() {
         write_file_if_absent(".github/workflows/auto_release.yml", &wf_content);
     }
 
-    println!("Initialized ChangeForge configuration.");
+    print_success("Initialized ChangeForge configuration.");
 }
