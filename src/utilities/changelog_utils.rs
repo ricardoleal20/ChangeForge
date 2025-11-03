@@ -1,7 +1,7 @@
+use colored::*;
 use std::collections::HashSet;
 use std::fs;
 use std::io::{BufRead, BufReader, Write};
-use colored::*;
 use terminal_size::{terminal_size, Width};
 // Local imports
 use crate::options::Changeset;

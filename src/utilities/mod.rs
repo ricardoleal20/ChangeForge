@@ -119,11 +119,23 @@ pub fn load_changeforge_config() -> CFConfig {
     let route = "pyproject.toml";
     let config = match fs::read_to_string(route) {
         Ok(c) => c,
-        Err(_) => return CFConfig { ai_enabled: true, templates_dir: None, commit_on_create: true },
+        Err(_) => {
+            return CFConfig {
+                ai_enabled: true,
+                templates_dir: None,
+                commit_on_create: true,
+            }
+        }
     };
     let toml_config: Value = match config.parse() {
         Ok(t) => t,
-        Err(_) => return CFConfig { ai_enabled: true, templates_dir: None, commit_on_create: true },
+        Err(_) => {
+            return CFConfig {
+                ai_enabled: true,
+                templates_dir: None,
+                commit_on_create: true,
+            }
+        }
     };
     if let Some(tool) = toml_config.get("tool") {
         if let Some(cf) = tool.get("changeforge") {
@@ -146,7 +158,11 @@ pub fn load_changeforge_config() -> CFConfig {
             };
         }
     }
-    CFConfig { ai_enabled: true, templates_dir: None, commit_on_create: true }
+    CFConfig {
+        ai_enabled: true,
+        templates_dir: None,
+        commit_on_create: true,
+    }
 }
 
 pub fn open_path(path: String) -> String {

@@ -9,20 +9,19 @@
 use colored::*;
 use fake::faker::lorem::en::Word;
 use fake::Fake;
-use regex::Regex;
-use inquire::{Confirm, Select, Text, set_global_render_config};
 use inquire::error::InquireError;
 use inquire::ui::{RenderConfig, Styled};
-use terminal_size::{terminal_size, Width};
+use inquire::{set_global_render_config, Confirm, Select, Text};
+use regex::Regex;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
+use terminal_size::{terminal_size, Width};
 // Local imports
 use crate::options::Changeset;
 use crate::utilities::{
-    create_changeset_folder, find_version, generate_ai_message,
+    create_changeset_folder, find_version, generate_ai_message, load_changeforge_config,
     version_operations::calculate_next_version, write_changeset_file, AIConfig,
-    load_changeforge_config,
 };
 
 /// Detect modules in the project by scanning files
@@ -257,9 +256,12 @@ fn ask_for_message_method() -> String {
     if cfg.ai_enabled {
         options.insert(0, "Generate with AI based on detected changes".to_string());
     }
-    Select::new("How would you like to create your changeset message?", options)
-        .prompt()
-        .unwrap_or_else(|e| handle_cancel(e))
+    Select::new(
+        "How would you like to create your changeset message?",
+        options,
+    )
+    .prompt()
+    .unwrap_or_else(|e| handle_cancel(e))
 }
 
 /// Ask for the message with template suggestions
@@ -305,10 +307,7 @@ fn ask_for_message(change_type: &str, tag: &str, module: &str) -> String {
     } else if method.contains("Use message template") {
         // Use external templates from configured directory
         let cfg = load_changeforge_config();
-        let dir = cfg
-            .templates_dir
-            .as_deref()
-            .unwrap_or("templates/messages");
+        let dir = cfg.templates_dir.as_deref().unwrap_or("templates/messages");
         let templates = read_templates_from_dir(dir);
         if templates.is_empty() {
             // This should not happen due to gating, but fallback to manual entry
@@ -468,7 +467,9 @@ pub fn create_changesets() {
             }
             // Run git add and commit
             let _ = Command::new("git").args(["add"]).args(&paths).status();
-            let _ = Command::new("git").args(["commit", "-m", &commit_msg]).status();
+            let _ = Command::new("git")
+                .args(["commit", "-m", &commit_msg])
+                .status();
         }
     }
     // Once you have created it, print a confirmation message
@@ -515,12 +516,14 @@ fn print_box_lines(lines: &[String], accent: &str) {
         .unwrap_or(default_width)
         .clamp(40, 100);
     let inner = width.saturating_sub(2);
-    let top = format!("{}{}{}",
+    let top = format!(
+        "{}{}{}",
         "┌".bright_black(),
         "─".repeat(inner).bright_black(),
         "┐".bright_black()
     );
-    let bottom = format!("{}{}{}",
+    let bottom = format!(
+        "{}{}{}",
         "└".bright_black(),
         "─".repeat(inner).bright_black(),
         "┘".bright_black()
