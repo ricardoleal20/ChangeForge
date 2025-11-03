@@ -8,14 +8,13 @@ version = "0.0.0"
 
 [tool.poetry.dependencies]
 python = ">=3.9"
-maturin = ">=1.5.1"
 
 [tool.versionwise]
 # Test file to ensure that you can find the version path to use
 version_path = ["pyproject.toml", "Cargo.toml"]
 
 [build-system]
-requires = ["maturin>=1.5.1; python_version<'3.11'", "setuptools-rust>=1.4.0"]
+requires = ["maturin>=1.5,<2"]
 build-backend = "maturin"
 
 [project]
@@ -27,5 +26,4 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = ["maturin>=1.5.1 ; python_version>'3.9'"]
 dynamic = ["authors", "description", "license", "readme", "version"]
