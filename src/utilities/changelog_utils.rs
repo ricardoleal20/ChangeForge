@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 use std::fs;
 use std::io::{BufRead, BufReader, Write};
+use colored::*;
+use terminal_size::{terminal_size, Width};
 // Local imports
 use crate::options::Changeset;
 use crate::utilities::update_version_path;
@@ -34,8 +36,8 @@ pub fn create_changelog(content: Vec<String>, version: &str) {
     update_version_path(version);
     // Delete all the current changesets
     delete_changesets();
-    // If everything's cool, then write the successful message
-    println!("The `CHANGELOG.md` and version has been updated!");
+    // If everything's cool, then write the successful message (styled)
+    print_success_box("CHANGELOG.md and version updated!");
 }
 
 pub fn new_changelog_entry(changesets: &[Changeset], version: &String) -> Vec<String> {
@@ -92,4 +94,39 @@ fn delete_changesets() {
         // the folder `.changeset` exists
         panic!("The folder {} does not exist.", folder_path);
     }
+}
+
+fn print_success_box(message: &str) {
+    let default_width: usize = 60;
+    let width: usize = terminal_size()
+        .map(|(Width(w), _)| w as usize)
+        .unwrap_or(default_width)
+        .clamp(40, 100);
+    let inner = width.saturating_sub(2);
+    let top = format!(
+        "{}{}{}",
+        "┌".bright_black(),
+        "─".repeat(inner).bright_black(),
+        "┐".bright_black()
+    );
+    let bottom = format!(
+        "{}{}{}",
+        "└".bright_black(),
+        "─".repeat(inner).bright_black(),
+        "┘".bright_black()
+    );
+    let content = format!(" {} {} ", "✔".green().bold(), message.green());
+    let len = content.chars().count();
+    let pad_total = inner.saturating_sub(len);
+    let pad_left = pad_total / 2;
+    let pad_right = pad_total.saturating_sub(pad_left);
+    let middle = format!(
+        "{}{}{}{}{}",
+        "│".bright_black(),
+        " ".repeat(pad_left),
+        content,
+        " ".repeat(pad_right),
+        "│".bright_black()
+    );
+    println!("\n{}\n{}\n{}\n", top, middle, bottom);
 }
