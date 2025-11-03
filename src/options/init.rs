@@ -2,26 +2,22 @@ use colored::Colorize;
 /// ================================ ///
 ///          OPTIONS :: Init          ///
 /// ================================ ///
-use requestty::{prompt_one, Question};
+use inquire::{Confirm, MultiSelect, Text};
 use std::fs;
 use std::path::Path;
 
 fn ask_bool(message: &str, default: bool) -> bool {
-    let question = Question::confirm("opt")
-        .message(message)
-        .default(default)
-        .build();
-    let result = prompt_one(question).expect("Error asking question");
-    result.as_bool().unwrap()
+    Confirm::new(message)
+        .with_default(default)
+        .prompt()
+        .expect("Error asking question")
 }
 
 fn ask_input(message: &str, default: &str) -> String {
-    let question = Question::input("inp")
-        .message(message)
-        .default(default)
-        .build();
-    let result = prompt_one(question).expect("Error asking input");
-    result.as_string().unwrap().to_string()
+    Text::new(message)
+        .with_default(default)
+        .prompt()
+        .expect("Error asking input")
 }
 
 fn write_file_if_absent(path: &str, content: &str) {
@@ -71,38 +67,57 @@ fn select_version_paths() -> Vec<String> {
     others.sort();
     candidates.extend(others);
 
+    // MultiSelect for discovered
     loop {
-        // Build choices each iteration excluding already selected
-        let mut choices: Vec<String> = candidates
+        let remaining: Vec<String> = candidates
             .iter()
-            .filter(|c| !selected.contains(c))
+            .filter(|c| !selected.contains(*c))
             .cloned()
             .collect();
-        // Darker gray for Other
-        let other_label = format!("{}", "Other (specify file path)".bright_black());
-        choices.push(other_label);
-        if !selected.is_empty() {
-            choices.push("Continue".to_string());
+        let msg = format!(
+            "{}",
+            "Select the files for extracting and modifying the version paths"
+        );
+        let choices = remaining.clone();
+        let picked = MultiSelect::new(&msg, choices)
+            .with_help_message("Use arrows/space to select, enter to confirm")
+            .prompt();
+        match picked {
+            Ok(items) => {
+                for it in items {
+                    if !selected.contains(&it) {
+                        selected.push(it);
+                    }
+                }
+            }
+            Err(_) => {}
         }
-
-        let question = Question::select("version_paths")
-            .message("Select the files for extracting and modifying the version paths")
-            .choices(choices)
-            .build();
-        let result = prompt_one(question).expect("Error selecting version paths");
-        let choice = result.as_list_item().unwrap().text.clone();
-
-        if choice == "Continue" {
+        if !selected.is_empty() {
             break;
-        } else if choice.contains("Other (specify file path)") {
-            let path = ask_input("    Enter file path:", "");
-            if !path.trim().is_empty() && !selected.contains(&path) {
-                selected.push(path);
-            }
-        } else {
-            if !selected.contains(&choice) {
-                selected.push(choice);
-            }
+        }
+        println!("Please select at least one file or specify a path.");
+        // If none selected, allow manual path input
+        let path = ask_input("    Enter file path:", "");
+        if !path.trim().is_empty() && !selected.contains(&path) {
+            selected.push(path);
+        }
+        if !selected.is_empty() {
+            break;
+        }
+    }
+
+    // Allow manual additions after selection
+    loop {
+        let add_more = ask_bool(
+            &format!("{}", "    Add another file path manually?".bright_black()),
+            false,
+        );
+        if !add_more {
+            break;
+        }
+        let path = ask_input("    Enter file path:", "");
+        if !path.trim().is_empty() && !selected.contains(&path) {
+            selected.push(path);
         }
     }
     selected
