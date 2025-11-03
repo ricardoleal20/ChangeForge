@@ -10,7 +10,10 @@ use colored::*;
 use fake::faker::lorem::en::Word;
 use fake::Fake;
 use regex::Regex;
-use requestty::{prompt, prompt_one, Answer, Question};
+use inquire::{Confirm, Select, Text, set_global_render_config};
+use inquire::error::InquireError;
+use inquire::ui::{RenderConfig, Styled};
+use terminal_size::{terminal_size, Width};
 use std::fs;
 use std::path::Path;
 use std::process::Command;
@@ -19,6 +22,7 @@ use crate::options::Changeset;
 use crate::utilities::{
     create_changeset_folder, find_version, generate_ai_message,
     version_operations::calculate_next_version, write_changeset_file, AIConfig,
+    load_changeforge_config,
 };
 
 /// Detect modules in the project by scanning files
@@ -107,6 +111,26 @@ fn get_git_changed_files() -> Vec<String> {
     changed_files
 }
 
+/// Read templates from configured directory
+fn read_templates_from_dir(dir: &str) -> Vec<(String, String)> {
+    let mut templates: Vec<(String, String)> = Vec::new();
+    if let Ok(entries) = fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_file() {
+                let name = path
+                    .file_name()
+                    .map(|s| s.to_string_lossy().to_string())
+                    .unwrap_or_else(|| String::from("template"));
+                if let Ok(content) = fs::read_to_string(&path) {
+                    templates.push((name, content));
+                }
+            }
+        }
+    }
+    templates
+}
+
 /// Select tags depending on the change type
 fn select_tags(change_type: &str) -> Vec<String> {
     let available_tags: Vec<String>;
@@ -139,23 +163,15 @@ fn select_tags(change_type: &str) -> Vec<String> {
 }
 
 /// Create the question to set the tag
-fn set_tag(change_type: &str) -> String {
+fn set_tag(change_type: &str) -> (String, String) {
     // Get the available tags
     let available_tags = select_tags(change_type);
-    // Create the question
-    let tag_question = Question::select("tag")
-        .message("Select the tag for this change")
-        .choices(available_tags)
-        .build();
-    // Perform the question
-    let results = prompt_one(tag_question);
-    let result = match results {
-        // Check and receive the OK, if there's any
-        Ok(x) => x,
-        Err(_) => panic!("There's something wrong selecting the tag for the changeset"),
-    };
-    // And, at the end, just receive the answer
-    let mut tag = result.as_list_item().unwrap().text.as_str();
+    let ans = Select::new("Select the tag for this change", available_tags)
+        .prompt()
+        .unwrap_or_else(|e| handle_cancel(e));
+    let mut tag = ans.as_str();
+    // Extract icon (first token) for commit usage
+    let icon = ans.split_whitespace().next().unwrap_or("").to_string();
     // And now, clean the tag
     let re = Regex::new(r"([A-Za-z]+):").unwrap();
     if let Some(capture) = re.captures(tag) {
@@ -163,32 +179,28 @@ fn set_tag(change_type: &str) -> String {
             tag = matched.as_str();
         }
     }
-    tag.to_string()
+    (tag.to_string(), icon)
 }
 
 /// Create the questions
-fn create_questions(default_name: &str) -> Vec<Question<'static>> {
-    //* P1
-    let changeset_name: Question<'_> = Question::input("name")
-        .message("Write the Changeset name")
-        .default(default_name)
-        .build();
-    //* P2
-    let change_type: Question<'_> = Question::select("change_type")
-        .message("Select the change type that is most adequate to these changes")
-        .choices(vec![
-            "💥 MAJOR: Most of the time related to breaking changes.",
-            "✨ MINOR: New features that keep backwards compatibility.",
-            "🩹 PATCH: Refactors, bugs, fixes and small changes.",
-        ])
-        .build();
-
-    // Return the initial questions - module and message will be asked later
-    // after we know the change type and tag
-    let questions = vec![changeset_name, change_type];
-
-    // Return the questions
-    questions
+fn create_name_and_type(default_name: &str) -> (String, String) {
+    apply_inquire_theme();
+    print_note("Provide a name and select the change type for this changeset.");
+    let name = Text::new("Write the Changeset name")
+        .with_default(default_name)
+        .prompt()
+        .unwrap_or_else(|e| handle_cancel(e));
+    let change_type = Select::new(
+        "Select the change type that is most adequate to these changes",
+        vec![
+            "💥 MAJOR: Most of the time related to breaking changes.".to_string(),
+            "✨ MINOR: New features that keep backwards compatibility.".to_string(),
+            "🩹 PATCH: Refactors, bugs, fixes and small changes.".to_string(),
+        ],
+    )
+    .prompt()
+    .unwrap_or_else(|e| handle_cancel(e));
+    (name, change_type)
 }
 
 /// Ask for module based on git changes and auto-detected modules
@@ -196,70 +208,58 @@ fn ask_for_module() -> String {
     // First try to get git changed files
     let git_modules = get_git_changed_files();
 
-    let module_question: Question;
-
     if !git_modules.is_empty() {
-        // If we have git changes, use those
-        module_question = Question::select("module")
-            .message("Select the module/file that has changed")
-            .choices(git_modules)
-            .build();
+        let choice = Select::new("Select the module/file that has changed", git_modules)
+            .prompt()
+            .unwrap_or_else(|e| handle_cancel(e));
+        if choice == "Other (specify manually)" {
+            return Text::new("Enter the custom module name")
+                .with_default("")
+                .prompt()
+                .unwrap_or_else(|e| handle_cancel(e));
+        }
+        return choice;
     } else {
-        // Otherwise use auto-detected modules or let user specify
         let detected_modules = detect_modules();
-
         if detected_modules.len() > 1 {
-            // More than just "Other"
-            module_question = Question::select("module")
-                .message("Select the module that has changed")
-                .choices(detected_modules)
-                .build();
+            let choice = Select::new("Select the module that has changed", detected_modules)
+                .prompt()
+                .unwrap_or_else(|e| handle_cancel(e));
+            if choice == "Other (specify manually)" {
+                return Text::new("Enter the custom module name")
+                    .with_default("")
+                    .prompt()
+                    .unwrap_or_else(|e| handle_cancel(e));
+            }
+            return choice;
         } else {
-            // Fall back to text input if no modules detected
-            module_question = Question::input("module")
-                .message("Write the module/class/function name that has changed (optional)")
-                .default("")
-                .build();
+            return Text::new("Write the module/class/function name that has changed (optional)")
+                .with_default("")
+                .prompt()
+                .unwrap_or_else(|e| handle_cancel(e));
         }
     }
-
-    // Get the answer
-    let result = prompt_one(module_question).expect("Error getting module input");
-
-    // Handle the result based on whether it was a select or input
-    let module = match result {
-        Answer::ListItem(item) => {
-            if item.text == "Other (specify manually)" {
-                // If "Other" was selected, ask for manual input
-                let custom_module = Question::input("custom_module")
-                    .message("Enter the custom module name")
-                    .build();
-                let custom_result = prompt_one(custom_module).expect("Error getting custom module");
-                custom_result.as_string().unwrap().to_string()
-            } else {
-                item.text
-            }
-        }
-        Answer::String(input) => input,
-        _ => "".to_string(),
-    };
-
-    module
 }
 
 /// Ask for message generation method (AI, template, manual)
 fn ask_for_message_method() -> String {
-    let method_question = Question::select("message_method")
-        .message("How would you like to create your changeset message?")
-        .choices(vec![
-            "Generate with AI based on detected changes",
-            "Use message template",
-            "Write message from scratch",
-        ])
-        .build();
-
-    let result = prompt_one(method_question).expect("Error selecting message method");
-    result.as_list_item().unwrap().text.to_string()
+    let cfg = load_changeforge_config();
+    let mut options: Vec<String> = vec!["Write message from scratch".to_string()];
+    // templates gating: require directory with at least one file
+    if let Some(dir) = cfg.templates_dir.as_ref() {
+        if let Ok(mut rd) = std::fs::read_dir(dir) {
+            if rd.next().is_some() {
+                options.insert(0, "Use message template".to_string());
+            }
+        }
+    }
+    // AI gating
+    if cfg.ai_enabled {
+        options.insert(0, "Generate with AI based on detected changes".to_string());
+    }
+    Select::new("How would you like to create your changeset message?", options)
+        .prompt()
+        .unwrap_or_else(|e| handle_cancel(e))
 }
 
 /// Ask for the message with template suggestions
@@ -284,63 +284,72 @@ fn ask_for_message(change_type: &str, tag: &str, module: &str) -> String {
             });
 
         // Ask if user wants to edit the generated message
-        let edit_question = Question::confirm("edit_message")
-            .message(format!(
-                "AI generated message: \n\"{}\"\n\nWould you like to edit this message?",
-                ai_message
-            ))
-            .default(false)
-            .build();
+        let edit = Confirm::new(&format!(
+            "AI generated message: \n\"{}\"\n\nWould you like to edit this message?",
+            ai_message
+        ))
+        .with_default(false)
+        .prompt()
+        .unwrap_or_else(|e| handle_cancel(e));
 
-        let edit_result = prompt_one(edit_question).expect("Error asking to edit message");
-
-        if edit_result.as_bool().unwrap() {
+        if edit {
             // User wants to edit the message
-            let edit_message_question = Question::input("edited_message")
-                .message("Edit the message:")
-                .default(&ai_message)
-                .build();
-
-            let edited_result = prompt_one(edit_message_question).expect("Error editing message");
-            edited_result.as_string().unwrap().to_string()
+            Text::new("Edit the message:")
+                .with_default(&ai_message)
+                .prompt()
+                .unwrap_or_else(|e| handle_cancel(e))
         } else {
             // Use the AI message as is
             ai_message
         }
     } else if method.contains("Use message template") {
-        // Use template approach
-        let template = get_message_template(change_type, tag);
+        // Use external templates from configured directory
+        let cfg = load_changeforge_config();
+        let dir = cfg
+            .templates_dir
+            .as_deref()
+            .unwrap_or("templates/messages");
+        let templates = read_templates_from_dir(dir);
+        if templates.is_empty() {
+            // This should not happen due to gating, but fallback to manual entry
+            return Text::new("Write the message for the change")
+                .with_default("")
+                .prompt()
+                .unwrap_or_else(|e| handle_cancel(e));
+        }
 
-        let message_question = Question::input("message")
-            .message("Write the message for the change")
-            .default(&template)
-            .build();
+        let names: Vec<String> = templates.iter().map(|(n, _)| n.clone()).collect();
+        let picked_name = Select::new("Select a template", names)
+            .prompt()
+            .unwrap_or_else(|e| handle_cancel(e));
+        let template = templates
+            .into_iter()
+            .find(|(n, _)| n == &picked_name)
+            .map(|(_, c)| c)
+            .unwrap_or_default();
 
-        let result = prompt_one(message_question).expect("Error getting message input");
-        let mut message: String = result.as_string().unwrap().to_string();
+        let mut message: String = Text::new("Write the message for the change")
+            .with_default(&template)
+            .prompt()
+            .unwrap_or_else(|e| handle_cancel(e));
 
         while message.is_empty() || message == template {
             println!(
                 "Error: You need to add a personalized message. The template cannot be used as is."
             );
-            let retry_question = Question::input("message")
-                .message("Write the message for the change")
-                .default(&template)
-                .build();
-            let retry_result = prompt_one(retry_question).expect("Error getting message input");
-            message = retry_result.as_string().unwrap().to_string();
+            message = Text::new("Write the message for the change (customize the template)")
+                .with_default(&template)
+                .prompt()
+                .unwrap_or_else(|e| handle_cancel(e));
         }
 
         message.to_string()
     } else {
         // Write from scratch
-        let message_question = Question::input("message")
-            .message("Write the message for the change")
-            .default("")
-            .build();
-
-        let result = prompt_one(message_question).expect("Error getting message input");
-        let message = result.as_string().unwrap();
+        let message = Text::new("Write the message for the change")
+            .with_default("")
+            .prompt()
+            .unwrap_or_else(|e| handle_cancel(e));
 
         if message.is_empty() {
             panic!("There was no message for the changeset. You need to add a message.");
@@ -352,53 +361,23 @@ fn ask_for_message(change_type: &str, tag: &str, module: &str) -> String {
 
 /// Display a summary and confirm before saving
 fn confirm_changeset(changeset: &Changeset) -> bool {
-    println!("\n{}", "Changeset Summary:".bold());
-    println!("Name: {}.toml", changeset.name);
-    println!("Type: {}", changeset.change);
-    println!("Tag: {}", changeset.tag);
+    // Pretty summary box
+    print_summary_box(changeset);
 
-    if !changeset.modules.is_empty() {
-        println!("Module: {}", changeset.modules);
-    }
-
-    println!("Message: {}", changeset.message);
-    println!("Version: {}\n", changeset.version);
-
-    let confirm_question = Question::confirm("confirm")
-        .message("Do you want to save this changeset?")
-        .default(true)
-        .build();
-
-    let result = prompt_one(confirm_question).expect("Error getting confirmation");
-    result.as_bool().unwrap()
+    Confirm::new("Do you want to save this changeset?")
+        .with_default(true)
+        .prompt()
+        .unwrap_or_else(|e| handle_cancel(e))
 }
 
 fn process_answers() -> Changeset {
     // Generate the default name
     let default_name = "Leave it blank for a random name";
-    // Process the initial results (name and change type)
-    let results = prompt(create_questions(default_name));
-    // Get the results
-    let result = match results {
-        // Check and receive the OK, if there's any
-        Ok(x) => x,
-        Err(_) => panic!("There's something wrong creating the changeset"),
-    };
-
-    // Get the name
-    let mut name = result.get("name").unwrap().as_string().unwrap();
+    let (mut name, selected_change) = create_name_and_type(default_name);
     if name == default_name || name.trim().is_empty() {
         name = Word().fake();
     }
-
-    // Get the change type
-    let mut change = result
-        .get("change_type")
-        .unwrap()
-        .as_list_item()
-        .unwrap()
-        .text
-        .as_str();
+    let mut change = selected_change.as_str();
     // Instance the regex to search for the word
     let re = Regex::new(r"\b(MAJOR|MINOR|PATCH)\b").unwrap();
     // get the change
@@ -409,7 +388,7 @@ fn process_answers() -> Changeset {
     }
 
     // Get the tag (now that we know the change type)
-    let tag = set_tag(change);
+    let (tag, tag_icon) = set_tag(change);
 
     // Get the module (with git and auto-detection)
     let module = ask_for_module();
@@ -435,10 +414,13 @@ fn process_answers() -> Changeset {
 
     // Return the changeset only if confirmed
     if confirm_changeset(&changeset) {
+        // Attach icon info via side channel by returning after commit stage
+        // We'll perform commit in create_changesets where we still know module path
+        // For now return the built changeset
         changeset
     } else {
-        println!("Changeset creation cancelled.");
-        std::process::exit(0);
+        print_cancel("Operation canceled by user");
+        std::process::exit(130);
     }
 }
 
@@ -450,9 +432,136 @@ pub fn create_changesets() {
     create_changeset_folder();
     // Once you have created the folder, create the changeset
     write_changeset_file(&changeset);
+    // Optional commit on create
+    let cfg = load_changeforge_config();
+    if cfg.commit_on_create {
+        let do_commit = Confirm::new("Do you want to commit the changeset and selected files?")
+            .with_default(true)
+            .prompt()
+            .unwrap_or_else(|e| handle_cancel(e));
+        if do_commit {
+            // Determine commit components
+            // Build commit message icon + tag + user message
+            // Re-select icon from the tag list using the stored tag description pattern
+            // Best-effort: infer icon by mapping tags
+            let icon = match changeset.tag.as_str() {
+                "Remove" => "⚰️",
+                "Rename" => "🚚",
+                "I" => "✏️", // fallback, unlikely used
+                "Behavior" => "💥",
+                "Feature" => "✨",
+                "Add" => "➕",
+                "Deprecated" => "🗑️",
+                "Refactor" => "♻️",
+                "Bug" => "🐛",
+                "Optimization" => "⚡️",
+                "Tests" => "🧪",
+                "Patch" => "🩹",
+                _ => "🔖",
+            };
+            let commit_msg = format!("{} {}: {}", icon, changeset.tag, changeset.message);
+            // Paths to add
+            let mut paths: Vec<String> = Vec::new();
+            paths.push(format!(".changesets/{}.toml", changeset.name));
+            if !changeset.modules.is_empty() && Path::new(&changeset.modules).exists() {
+                paths.push(changeset.modules.clone());
+            }
+            // Run git add and commit
+            let _ = Command::new("git").args(["add"]).args(&paths).status();
+            let _ = Command::new("git").args(["commit", "-m", &commit_msg]).status();
+        }
+    }
     // Once you have created it, print a confirmation message
-    println!(
-        "\n Changeset `{}.toml` has been created! 🎉",
-        changeset.name.green()
+    print_success_box(&format!(
+        "Changeset `{}` has been created!",
+        format!("{}.toml", changeset.name).green()
+    ));
+}
+
+// ===== Theming & helpers (similar approach to init) =====
+fn apply_inquire_theme() {
+    let mut rc = RenderConfig::default();
+    rc.prompt_prefix = Styled::new("❯");
+    rc.answered_prompt_prefix = Styled::new("✔");
+    set_global_render_config(rc);
+}
+
+fn print_note(message: &str) {
+    println!("{}", message.bright_black());
+}
+
+fn print_cancel(message: &str) {
+    print_cancel_box(message);
+}
+
+fn handle_cancel(err: InquireError) -> ! {
+    match err {
+        InquireError::OperationCanceled | InquireError::OperationInterrupted => {
+            print_cancel("Operation canceled by user");
+            std::process::exit(130);
+        }
+        other => {
+            print_cancel(&format!("Error: {}", other));
+            std::process::exit(1);
+        }
+    }
+}
+
+// ---------- Pretty boxes (separator/success/cancel/summary) ----------
+fn print_box_lines(lines: &[String], accent: &str) {
+    let default_width: usize = 60;
+    let width: usize = terminal_size()
+        .map(|(Width(w), _)| w as usize)
+        .unwrap_or(default_width)
+        .clamp(40, 100);
+    let inner = width.saturating_sub(2);
+    let top = format!("{}{}{}",
+        "┌".bright_black(),
+        "─".repeat(inner).bright_black(),
+        "┐".bright_black()
     );
+    let bottom = format!("{}{}{}",
+        "└".bright_black(),
+        "─".repeat(inner).bright_black(),
+        "┘".bright_black()
+    );
+    println!("\n{}", top);
+    for line in lines {
+        let content = format!(" {} {}", accent, line);
+        let len = content.chars().count();
+        let pad_total = inner.saturating_sub(len);
+        let pad_right = pad_total; // left already included by accent + space
+        println!(
+            "{}{}{}{}",
+            "│".bright_black(),
+            content,
+            " ".repeat(pad_right),
+            "│".bright_black()
+        );
+    }
+    println!("{}\n", bottom);
+}
+
+fn print_success_box(message: &str) {
+    let line = format!("{} {}", "✔".green().bold(), message.green());
+    print_box_lines(&[line], "");
+}
+
+fn print_cancel_box(message: &str) {
+    let line = format!("{} {}", "✖".red().bold(), message.red());
+    print_box_lines(&[line], "");
+}
+
+fn print_summary_box(changeset: &Changeset) {
+    let mut lines: Vec<String> = Vec::new();
+    lines.push(format!("{}", "Changeset Summary:".bold()));
+    lines.push(format!("Name: {}.toml", changeset.name));
+    lines.push(format!("Type: {}", changeset.change));
+    lines.push(format!("Tag: {}", changeset.tag));
+    if !changeset.modules.is_empty() {
+        lines.push(format!("Module: {}", changeset.modules));
+    }
+    lines.push(format!("Message: {}", changeset.message));
+    lines.push(format!("Version: {}", changeset.version));
+    print_box_lines(&lines, "");
 }

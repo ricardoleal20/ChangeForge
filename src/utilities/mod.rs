@@ -84,6 +84,71 @@ pub fn find_version_in_file() -> Vec<String> {
     version_paths
 }
 
+pub struct CFConfig {
+    pub ai_enabled: bool,
+    pub templates_dir: Option<String>,
+    pub commit_on_create: bool,
+}
+
+pub fn load_changeforge_config() -> CFConfig {
+    // Try changeforge.toml first
+    if let Ok(cfg) = fs::read_to_string("changeforge.toml") {
+        if let Ok(toml_cfg) = cfg.parse::<Value>() {
+            if let Some(cf) = toml_cfg.get("changeforge") {
+                let ai_enabled = cf
+                    .get("ai_enabled")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(true);
+                let templates_dir = cf
+                    .get("templates_dir")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string())
+                    .filter(|s| !s.trim().is_empty());
+                return CFConfig {
+                    ai_enabled,
+                    templates_dir,
+                    commit_on_create: cf
+                        .get("commit_on_create")
+                        .and_then(|v| v.as_bool())
+                        .unwrap_or(true),
+                };
+            }
+        }
+    }
+    // Fallback to pyproject.toml [tool.changeforge]
+    let route = "pyproject.toml";
+    let config = match fs::read_to_string(route) {
+        Ok(c) => c,
+        Err(_) => return CFConfig { ai_enabled: true, templates_dir: None, commit_on_create: true },
+    };
+    let toml_config: Value = match config.parse() {
+        Ok(t) => t,
+        Err(_) => return CFConfig { ai_enabled: true, templates_dir: None, commit_on_create: true },
+    };
+    if let Some(tool) = toml_config.get("tool") {
+        if let Some(cf) = tool.get("changeforge") {
+            let ai_enabled = cf
+                .get("ai_enabled")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true);
+            let templates_dir = cf
+                .get("templates_dir")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string())
+                .filter(|s| !s.trim().is_empty());
+            return CFConfig {
+                ai_enabled,
+                templates_dir,
+                commit_on_create: cf
+                    .get("commit_on_create")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(true),
+            };
+        }
+    }
+    CFConfig { ai_enabled: true, templates_dir: None, commit_on_create: true }
+}
+
 pub fn open_path(path: String) -> String {
     // Open the file
     let file = match fs::File::open(path.clone()) {

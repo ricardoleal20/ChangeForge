@@ -243,6 +243,9 @@ fn generate_config_toml(
     version_paths: &[String],
     changesets_dir: &str,
     changelog_path: &str,
+    ai_enabled: bool,
+    templates_dir: &str,
+    commit_on_create: bool,
 ) -> String {
     let joined = version_paths
         .iter()
@@ -250,8 +253,8 @@ fn generate_config_toml(
         .collect::<Vec<String>>()
         .join(", ");
     format!(
-        "[changeforge]\nversion_path = [{}]\nchangesets_dir = \"{}\"\nchangelog_path = \"{}\"\n",
-        joined, changesets_dir, changelog_path
+        "[changeforge]\nversion_path = [{}]\nchangesets_dir = \"{}\"\nchangelog_path = \"{}\"\nai_enabled = {}\ntemplates_dir = \"{}\"\ncommit_on_create = {}\n",
+        joined, changesets_dir, changelog_path, ai_enabled, templates_dir, commit_on_create
     )
 }
 
@@ -269,6 +272,25 @@ fn generate_workflow_auto_release(target_branch: &str) -> String {
     )
 }
 
+fn ask_creation_options() -> (bool, bool) {
+    print_note("Add the following options for creation of changesets:");
+    let options = vec![
+        "🤖 AI messages: Allow generating messages with AI during create (requires an API key)"
+            .to_string(),
+        "💾 Commit after create: Ask to commit the changeset and selected files".to_string(),
+    ];
+    let selected = MultiSelect::new(
+        "Use arrows/space to select, enter to confirm",
+        options.clone(),
+    )
+    .with_help_message("Select none, one, or many options")
+    .prompt()
+    .unwrap_or_else(|e| handle_cancel(e));
+    let ai_enabled = selected.iter().any(|s| s.contains("AI messages"));
+    let commit_on_create = selected.iter().any(|s| s.contains("Commit after create"));
+    (ai_enabled, commit_on_create)
+}
+
 pub fn init_project() {
     // Apply theme once for this session
     apply_inquire_theme();
@@ -281,7 +303,27 @@ pub fn init_project() {
     let changesets_dir = ".changesets";
     let changelog_path = "CHANGELOG.md";
 
-    let config_content = generate_config_toml(&version_paths, &changesets_dir, &changelog_path);
+    print_separator();
+    // Extra options (single multi-select for bools)
+    let (ai_enabled, commit_on_create) = ask_creation_options();
+    print_separator();
+    print_note("Select or create a folder for message templates (optional).");
+    let templates_dir = Text::new("Templates directory (leave empty to disable):")
+        .with_default("")
+        .prompt()
+        .unwrap_or_else(|e| handle_cancel(e));
+    if !templates_dir.trim().is_empty() {
+        let _ = fs::create_dir_all(&templates_dir);
+    }
+
+    let config_content = generate_config_toml(
+        &version_paths,
+        &changesets_dir,
+        &changelog_path,
+        ai_enabled,
+        templates_dir.trim(),
+        commit_on_create,
+    );
     write_file_if_absent("changeforge.toml", &config_content);
 
     print_separator();
