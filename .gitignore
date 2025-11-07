@@ -25,3 +25,6 @@ poetry.lock
 # Ignore the png
 .png
 .jpeg
+
+# Ignore the dist folder
+dist/

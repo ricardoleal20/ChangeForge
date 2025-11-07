@@ -36,9 +36,13 @@ jobs:
 
       - name: Install Poetry and deps 🏗️
         run: |
-          pip install -Iv poetry
+          pip install poetry
           poetry config virtualenvs.in-project true
           poetry install --no-interaction
+          # If changeforge is not installed, try to build it
+          if ! poetry run changeforge --version >/dev/null 2>&1; then
+            poetry run maturin develop
+          fi
 
       - name: Prepare clean bump branch
         run: |
