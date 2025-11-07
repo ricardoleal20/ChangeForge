@@ -30,7 +30,7 @@ jobs:
         uses: PyO3/maturin-action@v1.49.4
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter --bindings bin
+          args: --release --out dist --find-interpreter
           sccache: "true"
           manylinux: auto
           before-script-linux: |
@@ -81,7 +81,7 @@ jobs:
             set -eux
             . "$HOME/.cargo/env"
             cd "$GITHUB_WORKSPACE"
-            maturin build --release --out dist --find-interpreter --bindings bin
+            maturin build --release --out dist --find-interpreter
       - name: Upload wheels (aarch64) 📤
         uses: actions/upload-artifact@v4
         with:
@@ -104,7 +104,7 @@ jobs:
         uses: PyO3/maturin-action@v1.49.4
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist -i python3.12 --bindings bin
+          args: --release --out dist -i python3.12
           sccache: "true"
 
       - name: Upload wheels 📤
@@ -128,7 +128,7 @@ jobs:
         uses: PyO3/maturin-action@v1.49.4
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist -i python3.12 --bindings bin
+          args: --release --out dist -i python3.12
           sccache: "true"
       - name: Upload wheels 📤
         uses: actions/upload-artifact@v4
@@ -144,7 +144,7 @@ jobs:
         uses: PyO3/maturin-action@v1.49.4
         with:
           command: sdist
-          args: --out dist --bindings bin
+          args: --out dist
       - name: Upload sdist 📤
         uses: actions/upload-artifact@v4
         with:
