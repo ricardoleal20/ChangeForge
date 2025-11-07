@@ -30,12 +30,12 @@ jobs:
         uses: PyO3/maturin-action@v1.49.4
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter
+          args: --release --out dist --find-interpreter -i python3.12
           sccache: "true"
           manylinux: auto
           before-script-linux: |
-            yum -y update
-            yum -y install openssl-devel pkgconfig
+            apt-get -y update
+            apt-get -y install libssl-dev pkg-config
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -58,8 +58,9 @@ jobs:
         uses: PyO3/maturin-action@v1.49.4
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter
+          args: --release --out dist --find-interpreter -i python3.12
           sccache: "true"
+
       - name: Upload wheels 📤
         uses: actions/upload-artifact@v4
         with:
@@ -81,7 +82,7 @@ jobs:
         uses: PyO3/maturin-action@v1.49.4
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter
+          args: --release --out dist --find-interpreter -i python3.12
           sccache: "true"
       - name: Upload wheels 📤
         uses: actions/upload-artifact@v4
