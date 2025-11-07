@@ -44,11 +44,12 @@ jobs:
             poetry run maturin develop
           fi
 
-      - name: Prepare clean bump branch
+      - name: Ensure clean working tree on main
         run: |
           git config user.email "github-actions@github.com"
           git config user.name "GitHub Actions"
-          git checkout -B bump-new-version origin/main
+          git fetch origin main --prune
+          git checkout -B main origin/main
 
       - name: Run bump if there are pending changesets
         id: bump
