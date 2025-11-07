@@ -30,7 +30,7 @@ jobs:
         uses: PyO3/maturin-action@v1.49.4
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist -find-interpreter
+          args: --release --out dist --find-interpreter
           sccache: "true"
           manylinux: auto
           before-script-linux: |
@@ -69,13 +69,19 @@ jobs:
           install: |
             set -eux
             apt-get update
-            apt-get install -y python3.12 python3.12-venv python3-pip libssl-dev pkg-config
+            DEBIAN_FRONTEND=noninteractive apt-get install -y \
+              python3 python3-venv python3-pip pkg-config build-essential curl ca-certificates
+            update-ca-certificates || true
+            # Rust toolchain for aarch64
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+            . "$HOME/.cargo/env"
             python3 -m pip install --upgrade pip
             pip3 install maturin==1.49.4
           run: |
             set -eux
+            . "$HOME/.cargo/env"
             cd "$GITHUB_WORKSPACE"
-            maturin build --release --out dist -i python3.12
+            maturin build --release --out dist --find-interpreter
       - name: Upload wheels (aarch64) 📤
         uses: actions/upload-artifact@v4
         with:
