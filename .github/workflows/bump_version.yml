@@ -51,17 +51,6 @@ jobs:
           git fetch origin main --prune
           git checkout -B main origin/main
 
-      - name: Run bump if there are pending changesets
-        id: bump
-        run: |
-          if [ -d .changesets ] && ls .changesets/*.toml >/dev/null 2>&1; then
-            poetry run changeforge bump
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "No pending changesets. Skipping bump."
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Read ChangeForge config paths
         id: cfg
         shell: bash
@@ -83,6 +72,20 @@ jobs:
           echo "$VERSIONS" >> $GITHUB_OUTPUT
           echo "__EOF__" >> $GITHUB_OUTPUT
 
+      - name: Run bump if there are pending changesets
+        id: bump
+        env:
+          CHANGESETS_DIR: ${{ steps.cfg.outputs.changesets_dir }}
+        run: |
+          CS_DIR="${CHANGESETS_DIR:-.changesets}"
+          if [ -d "$CS_DIR" ] && ls "$CS_DIR"/*.toml >/dev/null 2>&1; then
+            poetry run changeforge bump
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "No pending changesets. Skipping bump."
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Extract notes and version
         id: meta
         if: steps.bump.outputs.has_changes == 'true'
@@ -97,6 +100,7 @@ jobs:
 
       - name: Compute assignee
         id: who
+        if: steps.bump.outputs.has_changes == 'true'
         run: |
           echo "assignee=${{ github.event.head_commit.author.username || github.actor }}" >> $GITHUB_OUTPUT
 
