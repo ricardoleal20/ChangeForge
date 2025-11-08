@@ -33,6 +33,10 @@ jobs:
           args: --release --out dist --find-interpreter
           sccache: "true"
           manylinux: auto
+        env:
+          # Workaround for ring's AArch64 assembly expecting __ARM_ARCH during cross-compilation
+          CFLAGS_aarch64_unknown_linux_gnu: -D__ARM_ARCH=8
+          CFLAGS_aarch64_unknown_linux_musl: -D__ARM_ARCH=8
           before-script-linux: |
             set -eux
             if command -v microdnf >/dev/null 2>&1; then
