@@ -93,6 +93,8 @@ To contribute to `ChangeForge`, follow these steps:
 4. Push your changes to your fork.
 5. Create a pull request.
 
+For a more detailed guide, please read our [contributing document](https://github.com/ricardoleal20/ChangeForge/blob/main/docs/CONTRIBUTING.md).
+
 ## License
 
 Project Name is released under the [MIT License](LICENSE).
