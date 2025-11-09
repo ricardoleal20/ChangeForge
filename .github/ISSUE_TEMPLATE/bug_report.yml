@@ -1,0 +1,93 @@
+name: "Bug report"
+description: "Report a bug to help us improve"
+title: "bug: <short summary>"
+labels: ["bug"]
+assignees: []
+body:
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: "Pre-checks"
+      options:
+        - label: "I searched existing issues and didn't find a match"
+          required: true
+        - label: "I read CONTRIBUTING.md and agree to follow the guidelines"
+          required: true
+        - label: "I can reproduce this with a minimal, standalone example"
+          required: false
+  - type: textarea
+    id: current
+    attributes:
+      label: "Current behavior"
+      description: "What happens now? Include error messages and screenshots if relevant."
+      placeholder: "Describe the observed behavior"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Expected behavior"
+      description: "What should happen instead?"
+      placeholder: "Describe the expected outcome"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: "Steps to reproduce"
+      description: "Numbered steps or a minimal reproduction repository"
+      placeholder: |
+        1. Go to '...'
+        2. Run '...'
+        3. Observe '...'
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: "Environment"
+      description: "System information to help diagnose"
+      placeholder: |
+        - OS: macOS 14.5 / Ubuntu 22.04 / Windows 11
+        - Runtime/Tooling versions (e.g., Node, Python, Docker)
+        - Browser and version (if applicable)
+        - Project version / git commit
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Logs"
+      description: "Paste relevant logs or stack traces"
+      render: shell
+      placeholder: |
+        <copy logs or stack traces here>
+    validations:
+      required: false
+  - type: dropdown
+    id: severity
+    attributes:
+      label: "Severity"
+      options:
+        - "Low"
+        - "Moderate"
+        - "High"
+        - "Critical"
+    validations:
+      required: true
+  - type: checkboxes
+    id: willing
+    attributes:
+      label: "Contribution"
+      options:
+        - label: "I'm willing to submit a PR for this issue"
+          required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: "Additional context"
+      description: "Anything else we should know?"
+    validations:
+      required: false
+
+

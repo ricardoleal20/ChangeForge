@@ -1,0 +1,83 @@
+name: "Feature request"
+description: "Suggest an idea for this project"
+title: "feat: <short summary>"
+labels: ["enhancement"]
+assignees: []
+body:
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: "Pre-checks"
+      options:
+        - label: "I searched existing issues and discussions first"
+          required: true
+        - label: "I read CONTRIBUTING.md and agree to follow the guidelines"
+          required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Problem statement"
+      description: "What problem does this feature solve? Who is impacted?"
+      placeholder: "As a <role>, I want <capability>, so that <benefit>."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Proposed solution"
+      description: "Describe the desired behavior/API and any constraints"
+      placeholder: "Provide a clear proposal (interfaces, endpoints, UX, etc.)"
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternatives considered"
+      description: "List other solutions or approaches you tried"
+    validations:
+      required: false
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: "Scope"
+      options:
+        - label: "In scope: core implementation"
+        - label: "In scope: documentation"
+        - label: "In scope: tests"
+        - label: "Out of scope: breaking changes"
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: "Breaking change?"
+      options:
+        - "No"
+        - "Yes (describe in Additional context)"
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: "Acceptance criteria"
+      description: "Bullet points of what must be true for this to be complete"
+      placeholder: |
+        - [ ] Given X, when Y, then Z
+        - [ ] Metrics/telemetry updated
+        - [ ] Docs and examples added
+    validations:
+      required: false
+  - type: checkboxes
+    id: willing
+    attributes:
+      label: "Contribution"
+      options:
+        - label: "I'm willing to submit a PR for this feature"
+          required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: "Additional context"
+      description: "Links, mockups, prior art, or any extra notes"
+    validations:
+      required: false
+
+
