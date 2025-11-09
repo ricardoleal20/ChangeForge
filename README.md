@@ -1,14 +1,12 @@
 <p align="center">
-    <img src="https://github.com/ricardoleal20/ChangeForge/blob/main/docs/img/banner.png" width="50%" height="75%" />
+    <img src="https://github.com/ricardoleal20/ChangeForge/blob/main/docs/img/banner.png" width="100%" height="100%" />
 </p>
 <p align="center">
     <b>Tool for teams that manage the creation and modification of the </b>CHANGELOG<b> based on a specified set of changes.</b>
 </p>
 
-<!-- ![PyPi version](https://img.shields.io/pypi/v/changeforge?label=PyPi%20version&logo=PyPi&style=for-the-badge)
-![Python versions supported](https://img.shields.io/pypi/pyversions/changeforge?label=Python%20Versions%20Supported&logo=Python&style=for-the-badge)
-![Deployed](https://img.shields.io/github/actions/workflow/status/ricardoleal20/changeforge/.github/workflows/publish_on_release.yml?branch=main&label=LAST%20VERSION%20DEPLOYED%20%F0%9F%9A%80&logo=Github&style=for-the-badge)
-![License](https://img.shields.io/github/license/ricardoleal20/changeforge?color=%23808000&label=%F0%9F%93%84%20LICENSE&style=for-the-badge) -->
+![PyPi version](https://img.shields.io/pypi/v/changeforge?style=flat-square)
+![CI checks](https://img.shields.io/github/actions/workflow/status/ricardoleal20/ChangeForge/rust-ci.yml)
 
 ## Installation
 
@@ -61,6 +59,8 @@ changeforge create
 ```sh
 changeforge list
 ```
+
+This is how it looks the view
 
 ![Demo List Command](https://github.com/ricardoleal20/ChangeForge/blob/main/docs/img/demo_list_command.png)
 
