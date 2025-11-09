@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://github.com/ricardoleal20/ChangeForge/blob/main/docs/img/banner.png" width="50%" height="50%" />
+    <img src="https://github.com/ricardoleal20/ChangeForge/blob/main/docs/img/banner.png" width="50%" height="75%" />
 </p>
 <p align="center">
     <b>Tool for teams that manage the creation and modification of the </b>CHANGELOG<b> based on a specified set of changes.</b>
@@ -53,7 +53,7 @@ changeforge create
 - Changeset message: AI (if `ai_enabled`), a template from `templates_dir` (if any files exist), or manual text
 - If `commit_on_create = true`, you'll be prompted to commit the changeset and the selected file
 
-![Demo Create Command](https://github.com/ricardoleal20/ChangeForge/blob/main/docs/img/demo_create_command/demo_create_command.gif)
+![Demo Create Command](https://github.com/ricardoleal20/ChangeForge/blob/main/docs/img/demo_create_command.gif)
 
 
 3) View pending changes and next version:
@@ -62,7 +62,7 @@ changeforge create
 changeforge list
 ```
 
-![Demo List Command](https://github.com/ricardoleal20/ChangeForge/blob/main/docs/img/demo_create_command/demo_list_command.png)
+![Demo List Command](https://github.com/ricardoleal20/ChangeForge/blob/main/docs/img/demo_list_command.png)
 
 4) Perform the bump (updates the version and `CHANGELOG.md`, clears `.changesets/`):
 
