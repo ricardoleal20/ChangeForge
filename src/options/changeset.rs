@@ -78,7 +78,7 @@ impl PartialEq for Changeset {
 // Implement a PartialOrd method to sort the classes
 impl PartialOrd for Changeset {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.name.cmp(&other.name))
+        Some(self.cmp(other))
     }
 }
 

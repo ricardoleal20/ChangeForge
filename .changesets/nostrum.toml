@@ -1,0 +1,8 @@
+[changeset]
+change_type = "PATCH"
+tag = "Bug"
+version = "0.1.5"
+
+[changes]
+modules = ["src/options/changeset.rs"]
+description = "Fix a non-canonical implementation on the partial implementation for the Changeset files."
