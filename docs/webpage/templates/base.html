@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{TITLE}}</title>
+    <link rel="stylesheet" href="{{REL}}/styles.css" />
+  </head>
+  <body class="theme-dark">
+    <header class="docs-topbar">
+      <div class="container topbar-inner">
+        <a class="brand" href="{{REL}}/">
+          <img class="brand-logo" src="{{REL}}/img/logo.png" alt="ChangeForge logo" />
+          <span class="brand-name">ChangeForge</span>
+        </a>
+      </div>
+    </header>
+
+    <div class="docs-layout">
+      <aside class="docs-sidebar" aria-label="Sidebar">
+        <div class="sidebar-header">
+          <strong>ChangeForge Docs</strong>
+          <span class="badge">{{VERSION}}</span>
+        </div>
+        <nav class="sidebar-nav">
+          <a href="{{REL}}/getting-started.html">Getting Started</a>
+          <a href="{{REL}}/configuration.html">Configuration</a>
+          <nav class="sidebar-group">
+            <div class="sidebar-group-title">Commands (CLI)</div>
+            <div class="sidebar-subnav">
+              <a href="{{REL}}/commands/init.html">init</a>
+              <a href="{{REL}}/commands/create.html">create</a>
+              <a href="{{REL}}/commands/list.html">list</a>
+              <a href="{{REL}}/commands/bump.html">bump</a>
+            </div>
+          </nav>
+        </nav>
+      </aside>
+
+      <main class="docs-content">
+        {{CONTENT}}
+      </main>
+    </div>
+
+    <footer class="site-footer theme-dark-footer">
+      <div class="container footer-inner">
+        <p>2025 ChangeForge by<a href="https://github.com/ricardoleal20">Ricardo Leal</a>.</p>
+        <nav aria-label="Footer">
+          <a href="https://github.com/ricardoleal20/changeforge" rel="noopener">GitHub</a>
+          <a href="https://github.com/ricardoleal20/changeforge/issues" rel="noopener">Report an issue</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+  </html>
+
+

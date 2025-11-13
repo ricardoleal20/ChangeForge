@@ -1,12 +1,15 @@
 <p align="center">
-    <img src="https://github.com/ricardoleal20/ChangeForge/blob/main/docs/img/banner.png" width="100%" height="100%" />
+    <img src="https://github.com/ricardoleal20/ChangeForge/blob/main/docs/img/banner.png" width="80%" height="80%" />
 </p>
 <p align="center">
     <b>Tool for teams that manage the creation and modification of the </b>CHANGELOG<b> based on a specified set of changes.</b>
 </p>
 
-![PyPi version](https://img.shields.io/pypi/v/changeforge?style=flat-square)
-![CI checks](https://img.shields.io/github/actions/workflow/status/ricardoleal20/ChangeForge/rust-ci.yml)
+<center>
+
+![PyPi version](https://img.shields.io/pypi/v/changeforge?style=flat-square) ![CI checks](https://img.shields.io/github/actions/workflow/status/ricardoleal20/ChangeForge/rust-ci.yml)
+
+</center>
 
 ## Installation
 

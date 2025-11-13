@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ChangeForge Docs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav container">
+        <a class="brand" href="./">
+          <img class="brand-logo" src="../img/logo.png" alt="ChangeForge logo" />
+          <span class="brand-name">ChangeForge</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="./getting-started.html">Getting Started</a></li>
+          <li><a href="./commands/init.html">Commands</a></li>
+          <li><a href="./configuration.html">Configuration</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container hero-inner">
+          <h1 class="hero-title">
+            Effortless Changelogs, <br />
+            Seamless Versioning.
+          </h1>
+          <p class="hero-subtitle">
+            ChangeForge is a powerful CLI tool that helps your team manage changes
+            systematically and generates beautiful, consistent CHANGELOG entries with
+            ease.
+          </p>
+          <a class="btn btn-primary" href="./getting-started.html">Get Started</a>
+          <a class="btn btn-github" href="https://github.com/ricardoleal20/changeforge" target="_blank" rel="noopener" aria-label="Open ChangeForge on GitHub">
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" role="img">
+              <path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49C3.73 14.91 3.27 13.73 3.27 13.73c-.36-.91-.88-1.15-.88-1.15-.72-.49.05-.48.05-.48.79.06 1.21.82 1.21.82.71 1.21 1.87.86 2.33.66.07-.52.28-.86.5-1.06-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 8 3.13c.85 0 1.7.12 2.5.34 1.9-1.29 2.74-1.02 2.74-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.85-2.34 4.7-4.57 4.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </section>
+
+      <section class="section container" id="about">
+        <h2 class="section-title">What is ChangeForge?</h2>
+        <p class="section-lead">
+          ChangeForge streamlines your release process by automating changelog generation based on
+          your commit history or structured change files. It enforces a consistent format, making
+          it easy for your users and your team to see what's new in every release. Say goodbye to
+          manual changelog updates and hello to automated precision.
+        </p>
+      </section>
+
+      <section class="section container" id="getting-started">
+        <h3 class="section-title">Quick Start</h3>
+        <p class="section-lead">
+          Get up and running with ChangeForge in just a couple of commands.
+        </p>
+        <div class="code-card" role="region" aria-label="Quick start commands">
+          <div class="code-card-header">
+            <span>Installation &amp; First Use</span>
+            <span class="code-card-copy" aria-hidden="true">Copy</span>
+          </div>
+          <pre class="code-block"><code>$ pip install changeforge
+$ changeforge init
+$ changeforge create
+$ changeforge list
+$ changeforge bump</code></pre>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>2025 ChangeForge by<a href="https://github.com/ricardoleal20">Ricardo Leal</a>.</p>
+        <nav aria-label="Footer">
+          <a href="https://github.com/ricardoleal20/changeforge" rel="noopener">GitHub</a>
+          <a href="https://github.com/ricardoleal20/changeforge/issues" rel="noopener">Report an issue</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+  </html>
+
+
