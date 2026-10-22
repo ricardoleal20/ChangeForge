@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Static docs builder and dev server for ChangeForge.
+Static docs builder and dev server for ReleaseWeave.
 
 Usage:
   python docs/docs_build.py build     # Build site into ./docs
@@ -28,14 +28,14 @@ DEST_DIR = REPO_ROOT / "docs"
 IMG_DIR = REPO_ROOT / "docs" / "img"
 
 
-def read_version_from_pyproject(pyproject_path: Path) -> str:
+def read_version_from_manifest(manifest_path: Path) -> str:
     """
     Read version="x.y.z" from pyproject.toml without third-party deps.
     Returns a normalized string like "v1.2.3" (with leading 'v').
     """
-    if not pyproject_path.exists():
+    if not manifest_path.exists():
         return "v0.0.0"
-    content = pyproject_path.read_text(encoding="utf-8")
+    content = manifest_path.read_text(encoding="utf-8")
     # Try common patterns under [project] or tool sections
     m = re.search(r'(?mi)^\s*version\s*=\s*"(.*?)"\s*$', content)
     if not m:
@@ -236,8 +236,8 @@ def build() -> Tuple[int, int]:
     """Build pages from docs/webpage → docs with path adjustments."""
     ensure_dirs()
     copy_images()
-    version = read_version_from_pyproject(REPO_ROOT / "pyproject.toml")
-    base_url = read_cname_base_url(DEST_DIR / "CNAME")
+    version = read_version_from_manifest(REPO_ROOT / "Cargo.toml")
+    base_url = None  # Relative assets work locally and on GitHub Pages.
 
     copied = 0
     transformed = 0
@@ -254,7 +254,7 @@ def build() -> Tuple[int, int]:
             html_body = markdown_to_html(md)
             # Use the first heading as page title if present
             mtitle = re.search(r"^#\s+(.+)$", md, flags=re.MULTILINE)
-            title = mtitle.group(1).strip() if mtitle else "ChangeForge Docs"
+            title = mtitle.group(1).strip() if mtitle else "ReleaseWeave Docs"
             out = render_with_base(html_body, title, is_commands, version, base_url)
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_text(out, encoding="utf-8")

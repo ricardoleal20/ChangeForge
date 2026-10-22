@@ -1,40 +1,26 @@
 # Configuration
 
-Reference for the `changeforge.toml` file written by `changeforge init`.
+ReleaseWeave reads releaseweave.toml at the repository root. Use --root PATH from another directory.
 
-## Overview
-
-ChangeForge stores its settings in a simple TOML file at your project root: `changeforge.toml`. You can create or update it anytime by running `changeforge init`.
-
-## Example
-
-```
-[changeforge]
-# Files used to read/write your project version
-version_path = ["pyproject.toml"]
-# Directory where changesets are saved
+```toml
+mode = "monorepo"
 changesets_dir = ".changesets"
-# Path to your changelog
-changelog_path = "CHANGELOG.md"
-# Enable AI-assisted messages during 'create'
-ai_enabled = false
-# Directory with message templates (empty disables)
-templates_dir = ""
-# Ask to commit the changeset right after creation
-commit_on_create = false
+
+[[packages]]
+name = "acme-api"
+manifest = "crates/api/Cargo.toml"
+changelog = "crates/api/CHANGELOG.md"
+
+[[packages]]
+name = "@acme/web"
+manifest = "packages/web/package.json"
+changelog = "packages/web/CHANGELOG.md"
 ```
 
-## Options
+Use mode = "single" with exactly one package for a single repository. Supported version fields are package.version in Cargo, project.version or tool.poetry.version in Python, and top-level version in package.json. Set version_key for a custom TOML field. Add additional_manifests for synchronized version files belonging to one package.
 
-- **version_path** (array of strings): files where ChangeForge will extract and update the version. Common values include `pyproject.toml` or `Cargo.toml`. You can provide multiple paths.
-- **changesets_dir** (string): directory where interactive changesets are stored as TOML files. Default `.changesets`.
-- **changelog_path** (string): path to your `CHANGELOG.md` file.
-- **ai_enabled** (bool): when true, the `create` command offers an AI option to generate a message based on detected changes.
-- **templates_dir** (string): directory with message templates. When set and non‑empty, `create` offers to pick a template and customize it.
-- **commit_on_create** (bool): when true, after saving the changeset ChangeForge will offer to `git add`/`git commit` the file (and the selected module/file, if applicable).
+The PoC requires explicit stable versions. Cargo version.workspace inheritance and automatic dependent-package propagation are not implemented. Local Cargo.lock entries are synchronized; other lockfiles must be refreshed using the relevant package manager.
 
-## Notes
+Legacy changeforge.toml and embedded tool.changeforge configuration remain readable for single-package migration. New configuration takes precedence. All paths must stay inside the repository, and symbolic links are rejected.
 
-The `init` command helps you select _version_path_ files, toggle _ai_enabled_ and _commit_on_create_, set a _templates_dir_, and optionally scaffold GitHub workflows for PRs and Releases.
-
-
+Incompatible local Cargo path-dependency requirements block the release before any writes, including unconfigured workspace consumers. Registry dependencies are not rewritten.

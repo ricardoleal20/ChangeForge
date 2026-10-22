@@ -1,0 +1,42 @@
+name: ReleaseWeave release PR
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: releaseweave-pr
+  cancel-in-progress: false
+jobs:
+  release-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ricardoleal20/ChangeForge@main
+      - name: Prepare releases
+        id: plan
+        shell: bash
+        run: |
+          releaseweave plan --json > "$RUNNER_TEMP/plan.json"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          plan = json.loads(Path(os.environ['RUNNER_TEMP'], 'plan.json').read_text())
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+              out.write('pending=' + str(bool(plan['releases'])).lower() + '\n')
+          Path(os.environ['RUNNER_TEMP'], 'release-notes.md').write_text(
+              '\n'.join(r['package'] + '\n' + r['notes'] for r in plan['releases']))
+          PY
+      - name: Apply releases
+        if: steps.plan.outputs.pending == 'true'
+        run: releaseweave bump
+      - uses: peter-evans/create-pull-request@v6
+        if: steps.plan.outputs.pending == 'true'
+        with:
+          branch: releaseweave/releases
+          base: main
+          title: 'chore: release packages'
+          commit-message: 'chore: version packages and update changelogs'
+          body-path: ${{ runner.temp }}/release-notes.md

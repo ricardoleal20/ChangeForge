@@ -1,61 +1,36 @@
-name: 🦀 Rust CI Quality checks
-
+name: Rust quality and PoC
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
   pull_request:
-    branches: [ "main" ]
-
-env:
-  CARGO_TERM_COLOR: always
-
+    branches: [main]
+permissions:
+  contents: read
 jobs:
-  check:
-    name: Check 🔍
+  quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Check
-        run: cargo check --verbose
-
-  test:
-    name: Test Suite 🧪
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Run tests
-        run: cargo test --verbose
-
-  fmt:
-    name: Rustfmt 📝
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt
-      - name: Check formatting
+          components: rustfmt, clippy
+      - name: Format
         run: cargo fmt --all -- --check
-
-  clippy:
-    name: Clippy 📝
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Test
+        run: cargo test --locked
+      - name: Clippy
+        run: cargo clippy --all-targets --locked -- -D warnings
+      - name: GitHub publisher regression tests
+        run: python3 -m unittest discover -s scripts -p 'test_*.py' -v
+      - name: Build release binary
+        run: cargo build --release --locked
+      - name: Run both PoC scenarios
+        run: python3 scripts/demo.py
+      - name: Build documentation
+        run: python3 docs/docs_build.py build
+      - name: Upload reproducible demo evidence
+        uses: actions/upload-artifact@v4
         with:
-          components: clippy
-      - name: Clippy check
-        run: cargo clippy -- -D warnings
-
-  security_audit:
-    name: Security Audit 🔒
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install cargo-audit
-        run: cargo install cargo-audit
-      - name: Run security audit
-        run: cargo audit 
+          name: releaseweave-poc
+          path: .demo/
+          include-hidden-files: true

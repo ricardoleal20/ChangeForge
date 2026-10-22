@@ -1,0 +1,55 @@
+{
+  "single-repo": {
+    "dry_run_verified": true,
+    "pending_after_bump": 0,
+    "schema_version": 1,
+    "mode": "single",
+    "changesets": [
+      ".changesets/configurable-greeting.toml"
+    ],
+    "releases": [
+      {
+        "package": "hello-release",
+        "current_version": "1.2.3",
+        "next_version": "1.3.0",
+        "bump": "minor",
+        "tag": "v1.3.0",
+        "manifest": "Cargo.toml",
+        "changelog": "CHANGELOG.md",
+        "notes": "## [1.3.0]\n\n- Add a configurable greeting\n\n"
+      }
+    ]
+  },
+  "monorepo": {
+    "dry_run_verified": true,
+    "pending_after_bump": 0,
+    "schema_version": 1,
+    "mode": "monorepo",
+    "changesets": [
+      ".changesets/api-health.toml",
+      ".changesets/web-status.toml"
+    ],
+    "releases": [
+      {
+        "package": "@acme/web",
+        "current_version": "2.1.0",
+        "next_version": "2.1.1",
+        "bump": "patch",
+        "tag": "@acme/web/v2.1.1",
+        "manifest": "packages/web/package.json",
+        "changelog": "packages/web/CHANGELOG.md",
+        "notes": "## [2.1.1]\n\n- Fix the status indicator\n\n"
+      },
+      {
+        "package": "acme-api",
+        "current_version": "1.4.0",
+        "next_version": "1.5.0",
+        "bump": "minor",
+        "tag": "acme-api/v1.5.0",
+        "manifest": "crates/api/Cargo.toml",
+        "changelog": "crates/api/CHANGELOG.md",
+        "notes": "## [1.5.0]\n\n- Add a health endpoint\n\n"
+      }
+    ]
+  }
+}
