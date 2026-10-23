@@ -11,7 +11,7 @@ body:
       options:
         - label: "I searched existing issues and didn't find a match"
           required: true
-        - label: "I read CONTRIBUTING.md and agree to follow the guidelines"
+        - label: "I read the contributor guide and agree to follow the guidelines"
           required: true
         - label: "I can reproduce this with a minimal, standalone example"
           required: false
@@ -49,8 +49,8 @@ body:
       description: "System information to help diagnose"
       placeholder: |
         - OS: macOS 14.5 / Ubuntu 22.04 / Windows 11
-        - Runtime/Tooling versions (e.g., Node, Python, Docker)
-        - Browser and version (if applicable)
+        - Rust/Cargo version and Python version (if running the PoC)
+        - Command, repository mode (single/monorepo), and manifest types
         - Project version / git commit
     validations:
       required: false
@@ -89,5 +89,3 @@ body:
       description: "Anything else we should know?"
     validations:
       required: false
-
-

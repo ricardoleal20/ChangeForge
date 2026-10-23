@@ -1,5 +1,2 @@
-# These owners will be the default owners for everything in
-# the repo. Unless a later match takes precedence,
-# @ricardoleal20 will be requested for review when someone 
-# opens a pull request.
-*       @ricardoleal20 
+# The maintainer reviews incoming contributions.
+* @ricardoleal20

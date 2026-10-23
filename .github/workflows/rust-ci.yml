@@ -34,3 +34,15 @@ jobs:
           name: releaseweave-poc
           path: .demo/
           include-hidden-files: true
+  compatibility:
+    name: compatibility (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Test CLI
+        run: cargo test --all-targets --locked

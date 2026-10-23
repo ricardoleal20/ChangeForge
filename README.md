@@ -135,4 +135,6 @@ python3 scripts/demo.py
 python3 docs/docs_build.py build
 ```
 
-[Contributing](docs/CONTRIBUTING.md) · [Code of conduct](docs/CODE_OF_CONDUCT.md) · [Security](docs/SECURITY.md) · [MIT license](LICENCE)
+[Contributing](CONTRIBUTING.md) · [Code of conduct](CODE_OF_CONDUCT.md) · [Security](SECURITY.md) · [Roadmap](ROADMAP.md) · [MIT license](LICENCE)
+
+Contributions are welcome through issues and pull requests. Main is maintained through reviewed PRs and required CI checks; see the contributor guide for the workflow.

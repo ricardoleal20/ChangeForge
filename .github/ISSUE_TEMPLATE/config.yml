@@ -1,7 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: "Security: report a vulnerability"
-    url: "https://docs.github.com/code-security/security-advisories"
-    about: "Do not open public issues. Use GitHub Security Advisories (Security → Report a vulnerability) for private, coordinated disclosure."
-
-
+  - name: Report a security vulnerability privately
+    url: https://github.com/ricardoleal20/ChangeForge/security/advisories/new
+    about: Use private vulnerability reporting instead of a public issue.
