@@ -1,0 +1,7 @@
+mode = "single"
+changesets_dir = ".changesets"
+
+[[packages]]
+name = "releaseweave"
+manifest = "Cargo.toml"
+changelog = "CHANGELOG.md"

@@ -1,67 +1,31 @@
-# Getting Started with ChangeForge
+# Getting started
 
-Follow this guide to install, configure, and generate your first changelog in just a few minutes.
+ReleaseWeave is a Rust CLI for changeset-driven releases in single repositories and monorepos.
 
-## 1. Installation
+## Build and install
 
-Install the package using pip.
-
-```
-$ pip install changeforge
-```
-
-## 2. Initializing Your Project
-
-Run the `init` command in your project's root directory. This will guide you through an interactive
-setup and write a `changeforge.toml` configuration file. You can also opt-in to GitHub workflows
-for PRs and releases.
-
-```
-$ changeforge init
+```sh
+cargo build --release --locked
+cargo install --path . --locked --bin releaseweave
 ```
 
-Example configuration written to `changeforge.toml`:
+## Run the local PoC
 
-```
-[changeforge]
-version_path = ["pyproject.toml"]   # or Cargo.toml, etc.
-changesets_dir = ".changesets"
-changelog_path = "CHANGELOG.md"
-ai_enabled = false
-templates_dir = ""
-commit_on_create = false
+```sh
+python3 scripts/demo.py
 ```
 
-See the full configuration reference in [Configuration](./configuration.html).
+The demo runs both examples on disposable copies, verifies dry-run, and leaves updated manifests, changelogs and JSON evidence under .demo/. Python 3.9+ is needed for this runner only.
 
-## 3. Creating Your First Changelog Entry
+## First release
 
-Use the `create` command to record a new change. This interactively collects name, type, tag,
-module/file, and message, then writes a TOML file in the `.changesets` directory.
-
-```
-$ changeforge create
-```
-
-If AI is enabled or templates are configured in `changeforge.toml`, you'll be offered those methods
-to craft the message; otherwise you can write it from scratch.
-
-## 4. Previewing Your Changes
-
-Before updating your changelog, preview the suggested version and a grouped summary of changes with
-`list`.
-
-```
-$ changeforge list
+```sh
+releaseweave init --yes
+releaseweave create --bump minor --message "Add a new feature"
+releaseweave plan
+releaseweave bump --dry-run
+releaseweave bump
+releaseweave release --dry-run
 ```
 
-## 5. Generating the CHANGELOG.md
-
-When you're ready, run `bump`. This computes the next version from pending changesets, builds the
-entry, and inserts it into your `CHANGELOG.md`.
-
-```
-$ changeforge bump
-```
-
-
+For a monorepo, initialize with --mode monorepo and select each changed package using --package NAME. Only affected packages receive versions, changelogs and proposed GitHub tags.

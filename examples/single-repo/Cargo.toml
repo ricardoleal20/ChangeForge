@@ -1,0 +1,6 @@
+[package]
+name = "hello-release"
+version = "1.2.3"
+edition = "2021"
+
+[workspace]

@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+- Rename the local product and CLI to ReleaseWeave, with a ChangeForge migration alias.
+- Add independent single-repository and monorepo release plans, noninteractive commands and JSON output.
+- Validate changesets and stage version, changelog and local Cargo.lock updates before cleanup.
+- Replace the experimental Python release chain with a Rust composite action and per-package GitHub release workflows.
+- Add executable demos, regression tests and migration documentation.
+
 ## [0.1.5]
 
 ### Bug

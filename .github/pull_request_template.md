@@ -1,29 +1,19 @@
-# Summary 📝
+## Problem and resulting behavior
 
-Please provide a brief summary of the change and specify the issue that will be fixed.
+Describe the user-visible problem and how this change resolves it. Link an issue when relevant.
 
-## **Fixes** <!-- Specify the issue number here -->
+## Validation
 
-## Type of change 🦺
+List the checks run and any important coverage gaps. For CLI changes, include a small reproduction or before/after example.
 
-- [ ] 💥**MAJOR CHANGE**: Fix or feature that can alter the behavior of a component or project. Includes breaking changes.
-- [ ] ✨**MINOR CHANGE**: Addition of new features or deprecation of existing ones, without breaking changes.
-- [ ] 🩹**PATCH CHANGE**: Refactor of an existing component, bug fix, or improvement of a new library without breaking changes.
+## Compatibility and release note
 
-----------
-## How has this been tested? ⚗️
+Describe breaking behavior or migration steps. Link the changeset, or explain why a changeset is unnecessary for this PR.
 
-Please provide a brief summary of the change and specify the issue that will be fixed.
+## Checklist
 
-## Checklist 📋
-
-Ensure all the following points are satisfied before opening a **Pull Request** for review. If not, consider opening it as a **draft**.
-
-- [ ] 💻 My code follows the style guidelines of this project.
-- [ ] :octocat: I have performed a self-review of my code.
-- [ ] ⚠️ My code doesn't generate new warnings or alerts.
-- [ ] 🧪 New and existing tests pass successfully.
-- [ ] ✅ The checks pass successfully on my local machine.
-- [ ] 💯 My code is covered by tests.
-- [ ] 📓 Documentation and comments are added where needed.
-
+- [ ] The change is focused and follows the existing project structure.
+- [ ] Relevant tests pass; behavior changes include a regression test.
+- [ ] Formatting and clippy checks pass.
+- [ ] Documentation and migration notes are updated where relevant.
+- [ ] No credentials, generated demos or build artifacts are included.

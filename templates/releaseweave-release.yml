@@ -1,0 +1,32 @@
+name: ReleaseWeave GitHub releases
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+permissions:
+  contents: write
+concurrency:
+  group: releaseweave-publish
+  cancel-in-progress: false
+jobs:
+  release:
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.ref == 'releaseweave/releases' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+      - uses: ricardoleal20/ChangeForge@main
+      - name: Validate release manifest
+        run: releaseweave release --json > "$RUNNER_TEMP/releases.json"
+      - name: Create GitHub releases at the merged commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_COMMIT: ${{ github.event.pull_request.merge_commit_sha }}
+        shell: bash
+        run: python3 "$RELEASEWEAVE_PUBLISHER" --manifest "$RUNNER_TEMP/releases.json"

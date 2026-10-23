@@ -1,27 +1,30 @@
 [package]
-name = "changeforge"
+name = "releaseweave"
 version = "0.1.5"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Changeset-driven releases for single repositories and monorepos, built for GitHub"
+license = "MIT"
+repository = "https://github.com/ricardoleal20/ChangeForge"
+readme = "README.md"
+default-run = "releaseweave"
+
+[[bin]]
+name = "releaseweave"
+path = "src/main.rs"
+
+[[bin]]
+name = "changeforge"
+path = "src/compat.rs"
 
 [dependencies]
-fake = { version = "2.9.2", features = ["derive"] }
+anyhow = "1.0"
+glob = "0.3"
 clap = { version = "4.5.1", features = ["derive"] }
-regex = "1.10.3"
-requestty = "0.5.0"
-colored = "2.1.0"
 toml = "0.8.11"
 serde = { version = ">=1.0", features = ["derive"] }
-reqwest = { version = "0.11.24", default-features = false, features = [
-    "json",
-    "rustls-tls",
-] }
-dotenvy = "0.15.7"
 serde_json = "1.0.114"
-tokio = { version = "1.36", features = ["full"] }
+semver = { version = "1.0", features = ["serde"] }
+toml_edit = "0.22"
 inquire = "0.6"
-terminal_size = "0.3"
-
-[dev-dependencies]
 tempfile = "3.10.1"

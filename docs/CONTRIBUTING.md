@@ -1,115 +1,50 @@
-# Contributing Guide
+# Contributing to ReleaseWeave
 
-Thank you for your interest in contributing. This repository follows a Gitflow workflow, semantic versioning, and conventional commits augmented with GitMoji.
+ReleaseWeave is a Rust CLI for changeset-driven releases in single repositories and independently versioned monorepos. The current scope and limitations are documented in the [README](../README.md) and [roadmap](../ROADMAP.md).
 
-## Workflow and Branching
+## Local setup
 
-We protect `main` and `develop`. Never commit directly to these branches. All changes go through Pull Requests.
+Use a current stable Rust toolchain with rustfmt and clippy, Git, and Python 3.9+ for the demo and GitHub publisher tests. Fork the repository, clone your fork and create a feature branch from main.
 
-- `main`: Production-ready code. Only merges from `release/*` and `hotfix/*`. Tag every merge with the version.
-- `develop`: Latest development changes. Source for feature branches.
+```sh
+cargo build --locked
+cargo run -- --help
+```
 
-### Branch Types
+No API keys or GitHub account are needed to run the CLI locally. Only the GitHub publishing workflow uses GitHub credentials. Never put real tokens or private repository contents into fixtures or issues.
 
-- Feature: branch from `develop`, merge back to `develop`.
-  - Naming: `feature/<author>/<LINEAR_TASK_ID>-<short-slug>`
-  - Example: `feature/ricardo/ABC-123-user-authentication`
-  - Keep your branch up to date with `develop` before opening a PR.
-- Release: branch from `develop`, merge back to `main` and `develop`.
-  - Naming: `release/vX.Y.Z` (no new features; only fixes/docs/release tasks)
-- Hotfix: branch from `main`, merge back to `main` and `develop`.
-  - Naming: `hotfix/vX.Y.Z` (urgent production fixes only)
+## Before submitting a PR
 
-Ask a maintainer for the `LINEAR_TASK_ID` before creating a feature branch if you don't have one.
+```sh
+cargo fmt --all -- --check
+cargo test --all-targets --locked
+cargo clippy --all-targets --locked -- -D warnings
+python3 -m unittest discover -s scripts -p 'test_*.py' -v
+cargo build --release --locked
+python3 scripts/demo.py
+python3 docs/docs_build.py build
+```
 
-## Commit Messages
+The CI also tests the Rust CLI on macOS and Windows. Linux runs the full demonstration and publishing-boundary tests. Keep Cargo.lock committed. Do not commit target/, generated documentation pages, .demo/, operation locks or credentials.
 
-Use Conventional Commits with GitMoji. Format:
+## Changes and release notes
 
-`<gitmoji> type(scope): short imperative description`
+Keep each PR focused. For behavior changes, add a subprocess regression test in tests/cli.rs and update the relevant documentation. Explain user-visible behavior and migration implications in the PR. Use the real filesystem and CLI in tests; keep external network operations behind a boundary that can be tested without credentials.
 
-Common types:
-- `feat` new feature
-- `fix` bug fix
-- `docs` documentation changes
-- `style` formatting (no code changes)
-- `refactor` code refactoring
-- `test` add/update tests
-- `chore` maintenance tasks
+For a user-visible fix or feature, add a changeset from this repository root:
 
-Examples:
-- `✨ feat(api): add user authentication endpoints`
-- `🐛 fix(auth): handle token refresh race condition`
+```sh
+cargo run -- create --bump patch --message "Describe the user-visible change"
+```
 
-Make small, focused commits.
+Use minor for compatible features and major for breaking behavior. The maintainer coordinates pre-1.0 changes and release timing. Documentation or maintenance-only PRs can explain why no changeset is needed. Do not run bump on the development branch unless the PR is specifically preparing a release.
 
-## Pull Requests
+## Demos and safety
 
-PR requirements:
-- At least 1 approval
-- CI checks pass
-- Branch up to date with base
-- No direct commits to protected branches
-- Delete the feature branch after merge
+Run demos only on disposable copies of examples. scripts/demo.py creates them under .demo/. Never point a destructive test at a developer's real project. Include regression coverage for changes to planning, manifest editing, cleanup, rollback, dependency validation or release publication.
 
-Include:
-- What changed and why (problem/solution)
-- Any breaking changes and migration steps
-- Screenshots for UI changes (if applicable)
-- Tests added or updated
+## Reviews and maintenance
 
-## Versioning and Releases
+The main branch requires PR review, successful CI and resolved review conversations. The maintainer reviews external contributions. A green check does not replace review. Dependency update PRs are generated weekly and follow the same review process.
 
-We use Semantic Versioning (MAJOR.MINOR.PATCH).
-
-Release process:
-1. Create `release/vX.Y.Z` from `develop`
-2. Bump versions and finalize notes
-3. Fix release-only issues (no new features)
-4. PR into `main`
-5. After merge to `main`:
-   - Tag `vX.Y.Z`
-   - Merge back into `develop`
-   - Delete the release branch
-
-Hotfix process:
-1. Create `hotfix/vX.Y.Z` from `main`
-2. Implement fix and bump patch version
-3. PR into `main`
-4. After merge to `main`:
-   - Tag `vX.Y.Z`
-   - Merge back into `develop`
-   - Delete the hotfix branch
-
-## Code Quality
-
-- Preserve existing structures and do not remove unrelated functionality
-- Prefer constants over magic numbers
-- Use meaningful names and keep functions focused
-- Avoid duplication; extract reusable logic
-- Add tests for new behavior and bug fixes
-
-## Testing
-
-- Add or update tests to cover your changes, including edge cases and error paths
-- Ensure the test suite passes before opening a PR
-
-## Documentation
-
-- Update `README.md` and other docs as needed
-- Document public APIs and non-obvious decisions
-
-## Security
-
-Do not report vulnerabilities via public issues. See the Security Policy (`SECURITY.md`) and use GitHub Security Advisories to report privately.
-
-## PR Checklist
-
-- [ ] Branch type and name follow the rules
-- [ ] Small, focused commits using Conventional Commits + GitMoji
-- [ ] Tests added/updated and passing
-- [ ] Docs updated where needed
-- [ ] No unrelated changes
-- [ ] Ready for review (and branch up to date)
-
-
+Search existing issues before reporting a bug or proposing a feature. Use [private vulnerability reporting](../SECURITY.md) for security issues, and follow the [code of conduct](../CODE_OF_CONDUCT.md).

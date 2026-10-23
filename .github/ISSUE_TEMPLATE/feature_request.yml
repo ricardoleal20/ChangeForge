@@ -11,7 +11,7 @@ body:
       options:
         - label: "I searched existing issues and discussions first"
           required: true
-        - label: "I read CONTRIBUTING.md and agree to follow the guidelines"
+        - label: "I read the contributor guide and agree to follow the guidelines"
           required: true
   - type: textarea
     id: problem
@@ -79,5 +79,3 @@ body:
       description: "Links, mockups, prior art, or any extra notes"
     validations:
       required: false
-
-

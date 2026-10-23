@@ -1,0 +1,17 @@
+name: ReleaseWeave
+description: Build and install the ReleaseWeave CLI for single-repository and monorepo release plans
+branding:
+  icon: package
+  color: purple
+runs:
+  using: composite
+  steps:
+    - uses: dtolnay/rust-toolchain@stable
+    - name: Install CLI from this action revision
+      shell: bash
+      env:
+        RELEASEWEAVE_SOURCE: ${{ github.action_path }}
+      run: |
+        cargo install --path "$RELEASEWEAVE_SOURCE" --locked --bin releaseweave --root "$RUNNER_TEMP/releaseweave-cli" --force
+        echo "$RUNNER_TEMP/releaseweave-cli/bin" >> "$GITHUB_PATH"
+        echo "RELEASEWEAVE_PUBLISHER=$RELEASEWEAVE_SOURCE/scripts/publish_github.py" >> "$GITHUB_ENV"
