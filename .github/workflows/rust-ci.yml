@@ -29,7 +29,7 @@ jobs:
       - name: Build documentation
         run: python3 docs/docs_build.py build
       - name: Upload reproducible demo evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: releaseweave-poc
           path: .demo/
